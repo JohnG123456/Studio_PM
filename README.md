@@ -15,8 +15,8 @@ npm run dev
 ```
 
 Open http://localhost:3000. Data is stored in the browser's `localStorage`,
-pre-seeded with starter stage/budget/decision data so every view has something
-to show on first run — see [Seed data caveat](#seed-data-caveat).
+pre-seeded from the real Master Summary v14 and Clean_Budget_v7_4 documents —
+see [Data sources](#data-sources).
 
 ## Open questions from the handoff brief — resolved
 
@@ -62,33 +62,47 @@ This app should only ever be updated from Master Summary content (via the
 Decisions log and Planning ingestion), never from the Acoustic Design Document
 or Operations Manual directly.
 
-**Known data quality issue:** the studio's physical location has moved from
-under the house to above the carport. Room footprint is expected to stay a
-similar size, so budget figures are expected to hold at the category/line-item
-level — but exact acoustic dimensions (listening position, diffuser placement,
-wall treatment coordinates) are provisional until the new room is confirmed.
-Any `ProjectItem` or `BudgetLineItem` touching those dimensions carries a
-`provisional: true` flag and renders a **Provisional** badge — this is
-editable from day one and isn't gating Budget, Planning, or Rack/Signal Chain
-work.
+**Location-change caveat (unresolved):** the original project handoff
+described the studio moving from under the house to above the carport, with
+acoustic dimensions provisional until the new room is confirmed. Master
+Summary v14 itself makes **no mention of this anywhere** — it treats the
+6.7×5.0×3.0m room as fixed. The only thing v14 calls provisional is the
+listening position pending the Section 7A rolling bass test, which is a
+normal acoustic-commissioning step, not a location question. This app follows
+v14 (the canonical document) rather than the older handoff note, but the
+discrepancy is unresolved — confirm with John whether the carport relocation
+is still live before trusting room dimensions.
 
-## Seed data caveat
+## Data sources
 
-Master Summary v14 and Clean_Budget_v4.xlsx were referenced in the handoff
-brief but weren't available in this build session — only the handoff document
-itself was. Everything seeded in `lib/data/demoData.ts` (stage items,
-decisions, budget category totals) is placeholder content tagged
-`sourceVersion: "seed"`, built from what the brief and prior session notes
-describe, **not** a transcription of the real documents. Replace it via:
-- **Budget** — edit the category-total placeholder lines directly, or add
-  granular line items via *Budget → Add line*, sourced from the real
-  Clean_Budget_v4.
-- **Stage 0 items** — paste the Armadale Planning Agent's JSON status blocks
-  via *Settings → Planning Project Ingestion*.
-- **Decisions** — log real Section 20 entries via *Decisions → Log decision*,
-  or replace the seed set outright.
-- Settings → *Reset to seed data* clears everything back to this starting
-  point if you want a clean slate.
+Seeded from two real documents (`lib/data/demoData.ts`):
+- **Master Summary v14** — all stage items and decisions, sourced from
+  Section 7A (Acoustic Commissioning Sequence), Section 19 (Open Items), and
+  Section 20 (Resolved from Previous Versions). Each item's `sourceVersion`
+  cites the section/version it came from.
+- **Clean_Budget_v7_4.xlsx** — all 67 real budget line items. The sheet has
+  no single "mid" figure — each line is really two distinct product choices
+  (a preferred pick and a cheaper budget alternative), so `budgetLow` = the
+  sheet's Budget Option Total, `budgetHigh` = the Preferred Option Total, and
+  `budgetMid` is the midpoint of those two, computed here.
+
+Two open discrepancies surfaced rather than silently resolved — both visible
+in-app, not just in this file:
+- **Headphone amp conflict** (Board → Stage 8 → "Headphone amp — RNHP vs
+  HA8000"): Master Summary v14 still specifies Behringer HA8000; Clean_Budget
+  v7.4 lists an upgrade to a Rupert Neve Designs RNHP. Needs a decision to
+  reconcile which document is current.
+- **Build / Network-Data budget anomalies**: several lines in those two
+  categories have a Total that doesn't reconcile with Unit × Qty in the
+  source spreadsheet (a `data_only=True` stale-cache symptom — the totals
+  look like they were cached before quantities were last edited). Imported
+  as printed rather than recomputed, and tagged `FLAGGED` in each line's
+  notes — worth checking against the live spreadsheet before treating as
+  final.
+
+Because this is `localStorage` seed data, a browser that already loaded an
+earlier build of this app keeps its old data — Settings → *Reset to seed
+data* pulls in whatever `demoData.ts` currently contains.
 
 ## Data model
 
@@ -104,9 +118,12 @@ describe, **not** a transcription of the real documents. Replace it via:
   `lib/types.ts` implement the variance and cost-to-complete math described in
   the brief (Cost-to-complete = Σ(Budgeted-mid − Actual) over items not yet
   paid; category flags trip at 90%/100% of budgeted-high).
-- Category taxonomy (`CATEGORIES` in `lib/types.ts`) is a literal copy of the
-  Inventory app's `DEFAULT_STUDIO_AREAS` — keep the two lists in sync by hand
-  if either changes, since there's no shared package between the repos.
+- Category taxonomy (`CATEGORIES` in `lib/types.ts`) starts as a literal copy
+  of the Inventory app's `DEFAULT_STUDIO_AREAS` (11 categories) plus four
+  budget-only additions found in Clean_Budget_v7_4 with no Inventory app
+  equivalent — HVAC, Lighting, Flooring, Build. Keep the shared 11 in sync by
+  hand if either app's list changes, since there's no shared package between
+  the repos.
 
 ## Views
 

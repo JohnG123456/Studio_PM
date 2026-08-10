@@ -1,265 +1,135 @@
 import { BudgetLineItem, Decision, ProjectItem } from "../types";
 
-// Starter data so every view has something to show on first run. This is
-// NOT a transcription of Master Summary v14 or Clean_Budget_v4 — those
-// documents weren't available in this build session. Everything here is
-// clearly provenance-tagged as seed data; use Settings → Import Budget /
-// Planning Ingest to replace it with the real thing.
-
-function iso(daysFromNow: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + daysFromNow);
-  return d.toISOString().slice(0, 10);
-}
+// Initial data loaded into a fresh browser. Sourced from two real documents
+// supplied directly by John:
+//   - Master Summary v14 (14 Contour Rd, Roleystone WA) — stage items and
+//     decisions, sourceVersion "Master Summary v14" unless a section cites
+//     an earlier version explicitly (e.g. "v11", "v12").
+//   - Clean_Budget_v7_4.xlsx — all 67 real budget line items, sourceVersion
+//     "Clean_Budget_v7_4".
+// Stage 0 items are sourced from the handoff brief itself (approvals aren't
+// covered by the Master Summary, which is a design document, not a planning
+// one) — sourceVersion "Handoff brief".
+//
+// Known open discrepancies, not resolved here — surfaced instead so they
+// stay visible rather than getting silently papered over:
+//   - Master Summary v14 makes no mention of the studio moving from
+//     under-house to above-carport (a location change described in the
+//     original project handoff). The only "provisional" geometry v14 itself
+//     calls out is the listening position, pending the Section 7A rolling
+//     bass test — that's what drives `provisional: true` below, not the
+//     carport question.
+//   - Clean_Budget_v7_4 lists the primary control-room headphone amp as an
+//     RNHP upgrade ("UPDATED v7.4"), while Master Summary v14's own body
+//     text and Section 19 open items still say Behringer HA8000. See the
+//     "Headphone amp — RNHP vs HA8000" item on the Board (Stage 8).
+//   - A handful of Build and Network/Data budget lines have a Total that
+//     doesn't reconcile with Unit × Qty in the source spreadsheet — each is
+//     tagged FLAGGED in its notes; the Total value is imported as printed.
 
 const now = new Date().toISOString();
 
 export function buildDemoItems(): ProjectItem[] {
   const items: Omit<ProjectItem, "createdAt" | "updatedAt">[] = [
-    // Stage 0 — Planning & Approval
-    {
-      id: "seed-bal-assessment",
-      stage: 0,
-      name: "BAL assessment",
-      type: "task",
-      status: "in_progress",
-      category: "Control",
-      notes: "Bushfire Attack Level assessment for the Roleystone site — required before DA lodgement.",
-      dependsOn: [],
-      sourceVersion: "seed",
-    },
-    {
-      id: "seed-da-requirement",
-      stage: 0,
-      name: "Confirm DA requirement",
-      type: "decision",
-      status: "not_started",
-      category: "Control",
-      notes: "Confirm with City of Armadale whether a full Development Application is triggered or a Building Permit alone suffices.",
-      dependsOn: [],
-      sourceVersion: "seed",
-    },
-    {
-      id: "seed-building-permit",
-      stage: 0,
-      name: "Building Permit",
-      type: "task",
-      status: "not_started",
-      category: "Control",
-      notes: "",
-      dependsOn: ["seed-da-requirement"],
-      sourceVersion: "seed",
-    },
-    {
-      id: "seed-ctf-levy",
-      stage: 0,
-      name: "CTF levy",
-      type: "task",
-      status: "not_started",
-      category: "Control",
-      notes: "Construction Training Fund levy — payable once contract value is known.",
-      dependsOn: [],
-      sourceVersion: "seed",
-    },
-    {
-      id: "seed-builder-registration",
-      stage: 0,
-      name: "Builder registration check",
-      type: "task",
-      status: "not_started",
-      category: "Control",
-      notes: "",
-      dependsOn: [],
-      sourceVersion: "seed",
-    },
+    // ---------------------------------------------------------------
+    // Stage 0 — Planning & Approval (from the handoff brief; Master
+    // Summary doesn't cover approvals)
+    // ---------------------------------------------------------------
+    { id: "s0-bal-assessment", stage: 0, name: "BAL assessment", type: "task", status: "in_progress", category: "Control", notes: "Bushfire Attack Level assessment for the Roleystone site — required before DA lodgement.", dependsOn: [], sourceVersion: "Handoff brief" },
+    { id: "s0-da-requirement", stage: 0, name: "Confirm DA requirement", type: "decision", status: "not_started", category: "Control", notes: "Confirm with City of Armadale whether a full Development Application is triggered or a Building Permit alone suffices.", dependsOn: [], sourceVersion: "Handoff brief" },
+    { id: "s0-building-permit", stage: 0, name: "Building Permit", type: "task", status: "not_started", category: "Control", notes: "", dependsOn: ["s0-da-requirement"], sourceVersion: "Handoff brief" },
+    { id: "s0-ctf-levy", stage: 0, name: "CTF levy", type: "task", status: "not_started", category: "Control", notes: "Construction Training Fund levy — payable once contract value is known.", dependsOn: [], sourceVersion: "Handoff brief" },
+    { id: "s0-builder-registration", stage: 0, name: "Builder registration check", type: "task", status: "not_started", category: "Control", notes: "", dependsOn: [], sourceVersion: "Handoff brief" },
 
-    // Stage 1 — Pre-Construction
-    {
-      id: "seed-design-lock",
-      stage: 1,
-      name: "Design lock — above-carport layout",
-      type: "decision",
-      status: "blocked",
-      category: "Acoustics",
-      notes: "Location changed from under-house to above-carport. Footprint expected similar size, so budget category/line-item quantities should hold — but exact listening position and treatment coordinates are provisional until the new room is confirmed.",
-      dependsOn: [],
-      provisional: true,
-      sourceVersion: "seed",
-    },
-    {
-      id: "seed-cabinetmaker-drawings",
-      stage: 1,
-      name: "Cabinetmaker drawing pack",
-      type: "task",
-      status: "not_started",
-      category: "Desk",
-      notes: "Custom desk + two low side racks, angled 5–10° toward listening position.",
-      dependsOn: ["seed-design-lock"],
-      sourceVersion: "seed",
-    },
-    {
-      id: "seed-supplier-quotes",
-      stage: 1,
-      name: "Acoustic treatment supplier quotes",
-      type: "task",
-      status: "not_started",
-      category: "Acoustics",
-      notes: "Perth suppliers — Autex, Ecoustic, Noise Control Systems.",
-      dependsOn: [],
-      sourceVersion: "seed",
-    },
-    {
-      id: "seed-cabler-engagement",
-      stage: 1,
-      name: "Cabler engagement",
-      type: "task",
-      status: "not_started",
-      category: "Cabling",
-      notes: "",
-      dependsOn: [],
-      sourceVersion: "seed",
-    },
+    // ---------------------------------------------------------------
+    // Stage 1 — Pre-Construction (Section 19 Open Items)
+    // ---------------------------------------------------------------
+    { id: "s1-cabinetmaker-engagement", stage: 1, name: "Engage cabinetmaker", type: "task", status: "not_started", category: "Desk", notes: "Source and engage a Perth-based cabinetmaker for desk + rack joinery.", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s1-cabinetmaker-drawing-pack", stage: 1, name: "Cabinetmaker drawing pack", type: "task", status: "not_started", category: "Desk", notes: "Dimensioned drawing pack for desk fabrication quote — Section 8 is the specification, drawings translate it to build format.", dependsOn: ["s1-cabinetmaker-engagement"], sourceVersion: "Master Summary v14" },
+    { id: "s1-acoustic-treatment-quotes", stage: 1, name: "Acoustic treatment supplier quotes", type: "task", status: "not_started", category: "Acoustics", notes: "Perth suppliers — Autex, Ecoustic, Noise Control Systems.", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s1-patchbay-schedule-doc", stage: 1, name: "Confirm Patchbay_Schedule_v1_1.xlsx", type: "decision", status: "not_started", category: "Cabling", notes: "Confirm the companion document is uploaded to the project knowledge base; if not yet produced, schedule creation before cabler engagement.", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s1-audio-cabler-engagement", stage: 1, name: "Engage audio cabler", type: "task", status: "not_started", category: "Cabling", notes: "Engage Cablesmiths WA (or equivalent) to supply cable, terminate all wall panels, and test every line. Provide Patchbay_Schedule_v1_1.xlsx as scope of work.", dependsOn: ["s1-patchbay-schedule-doc"], sourceVersion: "Master Summary v14" },
+    { id: "s1-kh120-stand-selection", stage: 1, name: "KH120 II nearfield stand selection", type: "task", status: "not_started", category: "Monitoring", notes: "Specify model, height (tweeter at ~1200mm AFFL), spiked feet for rigid coupling.", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s1-a8h-bracket-selection", stage: 1, name: "A8H wall mount arm — select bracket", type: "task", status: "not_started", category: "Monitoring", notes: "Min 20kg rated capacity, 15° tilt range, rubber/neoprene isolation. Structural blocking centre at 1730–1750mm AFFL — confirm exact figure from the bracket spec sheet before the carpenter fixes blocking.", dependsOn: [], provisional: true, sourceVersion: "Master Summary v14" },
+    { id: "s1-rug-sourcing", stage: 1, name: "Source acoustic rug", type: "task", status: "not_started", category: "Flooring", notes: "3.5m × 4.5m, 100% wool pile (min 15mm), dense felt underlay (10mm, Dunlop Opal or equivalent), dark charcoal or deep grey — NOT beige (conflicts with Cask & Carbon palette). ~$2,500–3,500. Allow 6–12 week lead time for made-to-order — must be ordered well before the Stage 4 Critical Geometry install.", dependsOn: [], sourceVersion: "Master Summary v14" },
 
-    // Stage 2 — Construction Shell
-    {
-      id: "seed-walls",
-      stage: 2,
-      name: "Walls",
-      type: "task",
-      status: "not_started",
-      category: "Acoustics",
-      dependsOn: ["seed-building-permit"],
-      sourceVersion: "seed",
-    },
-    { id: "seed-hvac-shell", stage: 2, name: "HVAC rough-in", type: "task", status: "not_started", category: "Power", dependsOn: ["seed-building-permit"], sourceVersion: "seed" },
-    { id: "seed-power-shell", stage: 2, name: "Power rough-in", type: "task", status: "not_started", category: "Power", dependsOn: ["seed-building-permit"], sourceVersion: "seed" },
-    { id: "seed-floor", stage: 2, name: "Floor", type: "task", status: "not_started", category: "Acoustics", dependsOn: ["seed-building-permit"], sourceVersion: "seed" },
-    { id: "seed-doors", stage: 2, name: "Doors", type: "task", status: "not_started", category: "Acoustics", dependsOn: ["seed-walls"], sourceVersion: "seed" },
+    // ---------------------------------------------------------------
+    // Stage 2 — Construction Shell (Section 7A Phase 1)
+    // ---------------------------------------------------------------
+    { id: "s2-walls", stage: 2, name: "Walls", type: "task", status: "not_started", category: "Acoustics", notes: "Double-layer plasterboard (FYRCHEK), insulated stud walls (Acoustigard), resilient mounts + furring channels.", dependsOn: ["s0-building-permit"], sourceVersion: "Master Summary v14" },
+    { id: "s2-floor", stage: 2, name: "Floor", type: "task", status: "not_started", category: "Acoustics", notes: "Suspended concrete floor.", dependsOn: ["s0-building-permit"], sourceVersion: "Master Summary v14" },
+    { id: "s2-hvac-install", stage: 2, name: "HVAC install", type: "task", status: "not_started", category: "HVAC", notes: "Main studio: Daikin split system (owned). Vocal booth: Daikin Alira FTXM25 (confirmed).", dependsOn: ["s0-building-permit"], sourceVersion: "Master Summary v14" },
+    { id: "s2-power-install", stage: 2, name: "Power install", type: "task", status: "not_started", category: "Power", notes: "Dedicated isolated star-grounded audio circuit, installed during construction.", dependsOn: ["s0-building-permit"], sourceVersion: "Master Summary v14" },
+    { id: "s2-doors", stage: 2, name: "Doors", type: "task", status: "not_started", category: "Acoustics", notes: "D2 — hinged solid-core timber door, ~820mm clear opening, approx. centred on the rear wall.", dependsOn: ["s2-walls"], sourceVersion: "Master Summary v14" },
 
+    // ---------------------------------------------------------------
     // Stage 3 — Rough-In
-    {
-      id: "seed-cable-tray",
-      stage: 3,
-      name: "Cable tray runs",
-      type: "task",
-      status: "not_started",
-      category: "Cabling",
-      notes: "Must happen during slab/frame — cannot be retrofitted after lining.",
-      dependsOn: ["seed-power-shell"],
-      sourceVersion: "seed",
-    },
-    { id: "seed-wall-plate", stage: 3, name: "Wall plate cabling", type: "task", status: "not_started", category: "Cabling", dependsOn: ["seed-cable-tray"], sourceVersion: "seed" },
-    {
-      id: "seed-structural-blocking",
-      stage: 3,
-      name: "Structural blocking — A8H wall mount",
-      type: "task",
-      status: "not_started",
-      category: "Monitoring",
-      notes: "Blocking at 1400–1600mm AFFL for Adam Audio A8H mid-field mounts (not 1200mm — too low for line of sight above nearfields).",
-      dependsOn: ["seed-walls"],
-      sourceVersion: "seed",
-    },
+    // ---------------------------------------------------------------
+    { id: "s3-audio-cable-tray", stage: 3, name: "Audio cable tray", type: "task", status: "not_started", category: "Cabling", notes: "200mm wide × 50mm deep — all mic/line XLR cables (booth + rear wall runs) and speaker cables (Kemper → cab). Slab depth is 100mm, so 50mm is the maximum achievable tray depth.", dependsOn: ["s2-power-install", "s2-floor"], sourceVersion: "Master Summary v14" },
+    { id: "s3-data-cable-tray", stage: 3, name: "Data cable tray", type: "task", status: "not_started", category: "Cabling", notes: "100mm wide × 50mm deep — Ethernet (Cat6A shielded), HDMI/DisplayPort, USB active extension, headphone runs, PoE camera cable.", dependsOn: ["s2-power-install", "s2-floor"], sourceVersion: "Master Summary v14" },
+    { id: "s3-booth-wall-plate-cabling", stage: 3, name: "Booth wall plate cabling", type: "task", status: "not_started", category: "Cabling", notes: "HDMI/DisplayPort (15m+ rated), USB 3.0 active extension (10–15m), GPO. Star topology home run to the right rack — no daisy-chaining.", dependsOn: ["s3-audio-cable-tray", "s3-data-cable-tray"], sourceVersion: "Master Summary v14" },
+    { id: "s3-rear-wall-panel-cabling", stage: 3, name: "Rear wall recording panel cabling", type: "task", status: "not_started", category: "Cabling", notes: "6× XLR in (RW1–RW6) + 2× headphone send (RW-HP-L/R) + panel-mount volume control. Metal wall plate, Neutrik connectors, right side of D2, ~1000–1200mm AFFL. Independent home run to rack.", dependsOn: ["s3-audio-cable-tray", "s3-data-cable-tray"], sourceVersion: "Master Summary v14" },
+    { id: "s3-a8h-structural-blocking", stage: 3, name: "A8H structural blocking", type: "task", status: "not_started", category: "Monitoring", notes: "Structural blocking timber at 1730–1750mm AFFL in the structural wall (NOT the false wall frame) — lands the 1700mm AFFL acoustic axis after typical 30–50mm bracket drop. Confirm exact centre from the bracket spec sheet before the carpenter fixes blocking.", dependsOn: ["s1-a8h-bracket-selection", "s2-walls"], provisional: true, sourceVersion: "Master Summary v14" },
+    { id: "s3-ceiling-joist-verification", stage: 3, name: "Verify ceiling joist positions", type: "task", status: "not_started", category: "Acoustics", notes: "Must be verified against the primary cloud and rear scatter-panel suspension points before ordering threaded rod. Scatter panel centres at 5300mm from the structural front wall, ±1250mm from each side wall.", dependsOn: ["s2-walls"], sourceVersion: "Master Summary v14" },
 
-    // Stage 4 — Critical Geometry
-    {
-      id: "seed-false-wall",
-      stage: 4,
-      name: "False wall",
-      type: "task",
-      status: "not_started",
-      category: "Acoustics",
-      notes: "Two-frame timber assembly — not steel, steel transmits vibration.",
-      dependsOn: ["seed-design-lock"],
-      provisional: true,
-      sourceVersion: "seed",
-    },
-    {
-      id: "seed-rear-diffusers",
-      stage: 4,
-      name: "Rear diffusers — 2D Skyline QRD",
-      type: "task",
-      status: "not_started",
-      category: "Acoustics",
-      notes: "Prime 7, fd=700Hz, 40mm blocks, 228mm depth — spec locked; exact panel placement provisional pending room confirmation.",
-      dependsOn: ["seed-false-wall"],
-      provisional: true,
-      sourceVersion: "seed",
-    },
-    { id: "seed-rug", stage: 4, name: "Rug", type: "task", status: "not_started", category: "Acoustics", dependsOn: ["seed-false-wall"], sourceVersion: "seed" },
-    {
-      id: "seed-provisional-monitors",
-      stage: 4,
-      name: "Provisional monitor placement",
-      type: "gear",
-      status: "not_started",
-      category: "Monitoring",
-      notes: "Adam Audio A8H — placed provisionally to empirically confirm listening position before side treatment is installed.",
-      dependsOn: ["seed-structural-blocking"],
-      provisional: true,
-      sourceVersion: "seed",
-    },
+    // ---------------------------------------------------------------
+    // Stage 4 — Critical Geometry (Section 7A Phase 3)
+    // "Install: full false wall assembly, rear wall 2D Skyline QRD
+    // diffusers, acoustic rug, A8H midfields, KH120 II nearfields
+    // (provisional). DO NOT install: front/rear corner bass traps, side
+    // wall panels, ceiling cloud."
+    // ---------------------------------------------------------------
+    { id: "s4-false-wall", stage: 4, name: "False wall assembly", type: "task", status: "not_started", category: "Acoustics", notes: "Two-frame timber construction — Frame 1 (45×45mm studs @600c/c, perforated ply face, dark charcoal fabric), 75mm open air gap, Frame 2 (150mm deep studs, Rockwool RW3 80kg/m³ friction-fit), 50mm rear air gap. Timber throughout, not steel — steel transmits vibration. Fixed to floor/ceiling track only, no fixings into the structural wall.", dependsOn: ["s2-walls"], sourceVersion: "Master Summary v14" },
+    { id: "s4-rear-diffusers", stage: 4, name: "Rear wall 2D Skyline QRD diffusers", type: "task", status: "not_started", category: "Acoustics", notes: "LOCKED — prime 7, fd=700Hz, 40mm × 40mm DAR pine blocks (7 heights, 0–210mm), 228mm total panel depth, 1600×1800mm per panel, matte black MDF base. Right-side panel is a full fixed 1600mm skyline panel (W3 window removed, v7).", dependsOn: ["s2-walls"], sourceVersion: "Master Summary v14" },
+    { id: "s4-acoustic-rug-install", stage: 4, name: "Install acoustic rug", type: "task", status: "not_started", category: "Flooring", notes: "3500×4500mm, front edge at 1200mm from the structural front wall, centred on the room, on dense felt underlay.", dependsOn: ["s1-rug-sourcing", "s2-floor"], sourceVersion: "Master Summary v14" },
+    { id: "s4-a8h-midfields-install", stage: 4, name: "Install A8H midfields (provisional)", type: "gear", status: "not_started", category: "Monitoring", notes: "Phase 3 install — provisional pending Phase 5 rolling bass test. Wall-mounted on structural wall, tweeter/acoustic axis 1700mm AFFL, ~12° downward tilt.", dependsOn: ["s3-a8h-structural-blocking"], provisional: true, sourceVersion: "Master Summary v14" },
+    { id: "s4-kh120-nearfields-install", stage: 4, name: "Install KH120 II nearfields (provisional)", type: "gear", status: "not_started", category: "Monitoring", notes: "Phase 3 install — provisional pending Phase 5 rolling bass test. 1250mm from structural front wall, 1750mm from each side wall, on stands, vinyl plank (not rug).", dependsOn: ["s1-kh120-stand-selection", "s2-floor"], provisional: true, sourceVersion: "Master Summary v14" },
 
-    // Stage 5 — Commissioning
-    {
-      id: "seed-lp-confirm",
-      stage: 5,
-      name: "Confirm listening position (bass test sequence)",
-      type: "task",
-      status: "not_started",
-      category: "Acoustics",
-      notes: "Phase 2–7 rolling bass test sequence — gated/sequential, not a flat checklist.",
-      dependsOn: ["seed-provisional-monitors", "seed-rear-diffusers"],
-      provisional: true,
-      sourceVersion: "seed",
-    },
+    // ---------------------------------------------------------------
+    // Stage 5 — Commissioning (Section 7A Phases 2, 4, 5, 7 — gated and
+    // sequential, not a flat checklist)
+    // ---------------------------------------------------------------
+    { id: "s5-phase2-bare-room-baseline", stage: 5, name: "Phase 2 — Bare room baseline measurement", type: "task", status: "not_started", category: "Acoustics", notes: "Vinyl plank installed. Mic at reference LP (2661mm from structural front wall, room centreline, ~1200mm AFFL). REW measurement, label '01 Bare Room'.", dependsOn: ["s2-walls", "s2-floor", "s2-hvac-install", "s2-power-install", "s2-doors"], sourceVersion: "Master Summary v14" },
+    { id: "s5-phase4-second-baseline", stage: 5, name: "Phase 4 — Second baseline measurement", type: "task", status: "not_started", category: "Acoustics", notes: "Same mic position as Phase 2. REW measurement, label '02 False Wall + Rear Diffusion + Rug + Monitors'. Desk must be removed from the room during measurement.", dependsOn: ["s5-phase2-bare-room-baseline", "s4-false-wall", "s4-rear-diffusers", "s4-acoustic-rug-install", "s4-a8h-midfields-install", "s4-kh120-nearfields-install"], sourceVersion: "Master Summary v14" },
+    { id: "s5-phase5-rolling-bass-test", stage: 5, name: "Phase 5 — Rolling bass test (LP confirmation)", type: "decision", status: "not_started", category: "Acoustics", notes: "Full-range speaker in corner on floor, bass sweep. Walk centreline between 2000–3000mm from the structural front wall. Confirm candidates with REW at ±100mm and ±50mm lateral. Reference target is 2661mm (38% of the 6146mm acoustic room length) — construction supports an LP landing anywhere in the 2500–2800mm range. This is the gating decision for all of Stage 6.", dependsOn: ["s5-phase4-second-baseline"], provisional: true, sourceVersion: "Master Summary v14" },
+    { id: "s5-phase7-monitor-calibration", stage: 5, name: "Phase 7 — Monitor calibration", type: "task", status: "not_started", category: "Monitoring", notes: "Fine-tune KH120 II equilateral triangle and A8H tilt/toe-in. Run Neumann MA 1 alignment. Final REW measurements at the confirmed LP. Move desk to its confirmed position and re-measure.", dependsOn: ["s5-phase5-rolling-bass-test", "s6-front-corner-traps", "s6-rear-corner-traps", "s6-side-wall-panels", "s6-primary-ceiling-cloud"], sourceVersion: "Master Summary v14" },
 
-    // Stage 6 — Remaining Treatment
-    {
-      id: "seed-side-panels",
-      stage: 6,
-      name: "Side wall panels",
-      type: "task",
-      status: "blocked",
-      category: "Acoustics",
-      notes: "Cannot be installed until listening position is empirically confirmed (hard sequencing rule).",
-      dependsOn: ["seed-lp-confirm"],
-      provisional: true,
-      sourceVersion: "seed",
-    },
-    { id: "seed-corner-traps", stage: 6, name: "Corner bass traps", type: "task", status: "blocked", category: "Acoustics", dependsOn: ["seed-lp-confirm"], provisional: true, sourceVersion: "seed" },
-    {
-      id: "seed-ceiling-cloud",
-      stage: 6,
-      name: "Ceiling scatter panel / cloud",
-      type: "task",
-      status: "blocked",
-      category: "Acoustics",
-      notes: "Suspension needs joist positions verified before install (hard sequencing rule).",
-      dependsOn: ["seed-lp-confirm"],
-      provisional: true,
-      sourceVersion: "seed",
-    },
+    // ---------------------------------------------------------------
+    // Stage 6 — Remaining Treatment (Section 7A Phase 6 — sequential:
+    // front traps → rear traps → side panels → ceiling cloud → sub crawl)
+    // ---------------------------------------------------------------
+    { id: "s6-front-corner-traps", stage: 6, name: "Front corner bass traps", type: "task", status: "blocked", category: "Acoustics", notes: "300×300mm triangular Rockwool RW3 wedge, floor to ceiling, both front corners.", dependsOn: ["s5-phase5-rolling-bass-test"], provisional: true, sourceVersion: "Master Summary v14" },
+    { id: "s6-rear-corner-traps", stage: 6, name: "Rear corner bass traps", type: "task", status: "blocked", category: "Acoustics", notes: "300×300mm triangular Rockwool RW3 wedge, floor to ceiling, both rear corners.", dependsOn: ["s6-front-corner-traps"], provisional: true, sourceVersion: "Master Summary v14" },
+    { id: "s6-side-wall-panels", stage: 6, name: "Side wall first-reflection panels", type: "task", status: "blocked", category: "Acoustics", notes: "MUST be installed AFTER the empirical listening position is confirmed — the mirror-trick method depends on the exact LP; moving it by 100mm shifts the reflection points measurably. 2× 1200×600×100mm primary panels per side (ear height) + 1× 600×600×75mm upper panel (~2000mm AFFL). Every panel mirrors its counterpart exactly.", dependsOn: ["s5-phase5-rolling-bass-test", "s6-rear-corner-traps"], provisional: true, sourceVersion: "Master Summary v14" },
+    { id: "s6-primary-ceiling-cloud", stage: 6, name: "Primary ceiling cloud (front)", type: "task", status: "blocked", category: "Acoustics", notes: "2400×1500×150mm (recommended 2800×1800mm) Rockwool RW3, suspended 2600mm AFFL. Position along the long axis depends on the confirmed LP — do not fix suspension points until LP is confirmed.", dependsOn: ["s5-phase5-rolling-bass-test", "s3-ceiling-joist-verification"], provisional: true, sourceVersion: "Master Summary v14" },
+    { id: "s6-ceiling-scatter-panels", stage: 6, name: "Rear ceiling scatter panels", type: "task", status: "not_started", category: "Acoustics", notes: "LOCKED coordinates — NOT listening-position dependent (unlike the primary cloud above). Two 1200×600×120mm slat-scatter panels, 40×40mm DAR pine slats (varied gap spacing) over 50mm Rockwool RW3, 18mm ply backing, 12° tilt toward the LP. Centres at 5300mm from the structural front wall, ±1250mm from each side wall. Can be fabricated by the cabinetmaker in parallel with the desk/rack build — only waits on joist verification, not LP confirmation.", dependsOn: ["s3-ceiling-joist-verification"], sourceVersion: "Master Summary v14" },
+    { id: "s6-sub-crawl-refinement", stage: 6, name: "Subwoofer crawl refinement", type: "task", status: "blocked", category: "Monitoring", notes: "Final KH750/HS8S positioning refinement, last step of Phase 6.", dependsOn: ["s6-front-corner-traps", "s6-rear-corner-traps"], provisional: true, sourceVersion: "Master Summary v14" },
 
-    // Stage 7 — Fit-out / Aesthetic
-    { id: "seed-lighting-zones", stage: 7, name: "Lighting zones — 6-zone dimmable", type: "task", status: "not_started", category: "Control", dependsOn: ["seed-power-shell"], sourceVersion: "seed" },
-    { id: "seed-velvet-panels", stage: 7, name: "Velvet panels", type: "task", status: "not_started", category: "Acoustics", dependsOn: ["seed-side-panels"], sourceVersion: "seed" },
-    { id: "seed-guitar-gallery", stage: 7, name: "Guitar gallery", type: "task", status: "not_started", category: "Guitar Rig", dependsOn: [], sourceVersion: "seed" },
-    { id: "seed-seating", stage: 7, name: "Seating", type: "task", status: "not_started", category: "Desk", dependsOn: [], sourceVersion: "seed" },
+    // ---------------------------------------------------------------
+    // Stage 7 — Fit-out / Aesthetic (Cask & Carbon, Section 18/19)
+    // ---------------------------------------------------------------
+    { id: "s7-swivel-chairs-sourcing", stage: 7, name: "Source swivel lounge chairs", type: "task", status: "not_started", category: "Desk", notes: "Two black PU leather swivel lounge chairs, low-profile papasan-style. Replaces a fixed sofa (rejected — acoustic asymmetry, sight-line geometry, commissioning walk-zone obstruction). Symmetrical about the room centreline, on vinyl plank, not the rug.", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s7-tv-swing-arm", stage: 7, name: "TV swing-arm mount (left wall)", type: "task", status: "not_started", category: "Control", notes: "Motorised or manual swing arm — swings toward the seating zone for viewing, returns flush for mixing. TCL 50P735, ~106mm clearance above the A8H sight-line.", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s7-guitar-gallery", stage: 7, name: "Guitar Gallery (right wall)", type: "task", status: "not_started", category: "Guitar Rig", notes: "6+ guitars on Midnight Blue acoustic panels with Dark Walnut vertical slat accents and burnished brass/copper-plate hangers. Specify hanging system.", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s7-side-wall-velvet-panels", stage: 7, name: "Side wall velvet facing", type: "task", status: "not_started", category: "Acoustics", notes: "Midnight Blue velvet facing over the acoustic panel substrate, Dark Walnut vertical slat accents, 20–30mm timber frame reveal visible at panel edges. Confirm colourway under 2700K warm lighting before ordering.", dependsOn: ["s6-side-wall-panels"], sourceVersion: "Master Summary v14" },
+    { id: "s7-control-room-lighting", stage: 7, name: "Control room lighting — confirm with electrician", type: "decision", status: "not_started", category: "Lighting", notes: "6-zone dimmable — desk wash, ceiling cloud halo, rack lighting, live end, perimeter, guitar wall spotlights. Trailing-edge LED-compatible or smart system only (leading-edge dimmers cause electrical noise). 2700K warm white throughout, no mixed colour temperatures.", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s7-booth-lighting", stage: 7, name: "Booth lighting — confirm with electrician", type: "decision", status: "not_started", category: "Lighting", notes: "Zone 1 — cloud halo (top of ceiling cloud, prevents claustrophobia). Zone 2 — single dimmable performance downlight/spotlight on the singer.", dependsOn: [], sourceVersion: "Master Summary v14" },
 
+    // ---------------------------------------------------------------
     // Stage 8 — Equipment Bring-up
-    { id: "seed-rack-build", stage: 8, name: "Rack build", type: "task", status: "not_started", category: "Rack", dependsOn: ["seed-cabinetmaker-drawings"], sourceVersion: "seed" },
-    { id: "seed-patchbay", stage: 8, name: "Patchbay", type: "task", status: "not_started", category: "Rack", dependsOn: ["seed-rack-build"], sourceVersion: "seed" },
-    {
-      id: "seed-signal-chain-test",
-      stage: 8,
-      name: "Signal chain testing",
-      type: "task",
-      status: "not_started",
-      category: "Control",
-      dependsOn: ["seed-patchbay", "seed-wall-plate"],
-      sourceVersion: "seed",
-    },
+    // ---------------------------------------------------------------
+    { id: "s8-desk-build", stage: 8, name: "Desk build", type: "task", status: "not_started", category: "Desk", notes: "1800mm work surface, ~780mm deep, tiered (660/770/790mm AFFL). Tasmanian oak frame (dark charcoal/black stain), spotted gum hero surfaces (oiled), Forbo Nero/Charcoal linoleum insert. Must be leveling-feet mounted, not floor-fixed — LP is confirmed empirically, desk needs to be movable.", dependsOn: ["s1-cabinetmaker-drawing-pack"], sourceVersion: "Master Summary v14" },
+    { id: "s8-rack-build", stage: 8, name: "Rack build (left + right)", type: "task", status: "not_started", category: "Rack", notes: "Two low side racks, 500mm W × 790mm H × 648mm D, angled 20–25° toward the listening position. Left rack (top→bottom, LOCKED v11): UFX III, Kemper, Fryette LXII, AC Infinity CLOUDPLATE #2, SixPack. Right rack: 2× patchbay, headphone amp, AC Infinity CLOUDPLATE #1, Furman PL-PLUS C E, Furman PS-8RE III.", dependsOn: ["s1-cabinetmaker-drawing-pack"], sourceVersion: "Master Summary v14" },
+    { id: "s8-patchbay-order", stage: 8, name: "Order patchbays", type: "task", status: "not_started", category: "Cabling", notes: "2 × Samson S-Patch Plus 48-point TRS (96 points total) — LOCKED v11.", dependsOn: ["s1-patchbay-schedule-doc"], sourceVersion: "Master Summary v14" },
+    { id: "s8-db25-fanouts-order", stage: 8, name: "Order DB25 fanouts", type: "task", status: "not_started", category: "Cabling", notes: "1× DB25 → 8×TRS (SixPack output) + 1× DB25 → 8×XLR-F (SixPack input) — Mogami Gold or Pro Co Sound.", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s8-patch-cables-order", stage: 8, name: "Order patch cables", type: "task", status: "not_started", category: "Cabling", notes: "12 × 1.5ft + 6 × 3ft Mogami Gold or Canare TRS patch cables (~$450–600 AUD).", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s8-second-cloudplate-order", stage: 8, name: "Order second AC Infinity CLOUDPLATE T7-N", type: "task", status: "not_started", category: "Rack", notes: "For the left rack — satisfies the Fryette LXII thermal rule (heat rises into fan, exhausts out the rear).", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s8-500-series-modules-purchase", stage: 8, name: "500-series module purchase", type: "task", status: "not_started", category: "500 Series", notes: "Heritage Audio 73JR II ×2 (Neve-style stereo pair, SixPack slots 1–2) + API 512c ×2 (API-style stereo pair, slots 3–4). Slots reserved in patchbay; purchase active per Clean_Budget_v7_4 (no longer deferred).", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s8-headphone-amp-decision", stage: 8, name: "Headphone amp — RNHP vs HA8000", type: "decision", status: "blocked", category: "Rack", notes: "CONFLICT BETWEEN SOURCES: Master Summary v14's body text and Section 19 open items still specify Behringer HA8000 as the confirmed headphone amp. Clean_Budget_v7_4 lists a v7.4 update upgrading the primary control-room unit to a Rupert Neve Designs RNHP, with HA8000 retained as a budget fallback / secondary booth cue amp. Needs a decision to reconcile which document is current before ordering.", dependsOn: [], sourceVersion: "Clean_Budget_v7_4 vs Master Summary v14" },
+    { id: "s8-headphones-order", stage: 8, name: "Order headphones", type: "task", status: "not_started", category: "Rack", notes: "Sony MDR-7506 (primary, closed-back) + Beyerdynamic DT770 Pro 80Ω (secondary).", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s8-headphone-volume-controls-order", stage: 8, name: "Order panel-mount headphone volume controls", type: "task", status: "not_started", category: "Rack", notes: "×2 — booth wall panel + rear wall panel. Passive rotary attenuator, installed by the audio cabler.", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s8-totalmix-setups", stage: 8, name: "Configure TotalMix FX Setups", type: "task", status: "not_started", category: "Control", notes: "Named Setups: Vocal/Condenser, Guitar/Reamp, Rear Wall. Manage phantom power state per Setup — UFX III channels 9–12 only, never on ribbon/dynamic/line inputs.", dependsOn: ["s8-rack-build"], sourceVersion: "Master Summary v14" },
+    { id: "s8-signal-chain-testing", stage: 8, name: "Signal chain testing", type: "task", status: "not_started", category: "Control", notes: "End-to-end test of every patchbay path once rack, patchbay, and wall cabling are all in place.", dependsOn: ["s8-rack-build", "s8-patchbay-order", "s3-booth-wall-plate-cabling", "s3-rear-wall-panel-cabling"], sourceVersion: "Master Summary v14" },
   ];
 
   return items.map((i) => ({ ...i, createdAt: now, updatedAt: now }));
@@ -267,88 +137,133 @@ export function buildDemoItems(): ProjectItem[] {
 
 export function buildDemoDecisions(): Decision[] {
   const decisions: Omit<Decision, "createdAt" | "updatedAt">[] = [
-    {
-      id: "seed-decision-lede",
-      title: "Acoustic strategy: LEDE",
-      description: "Live End Dead End strategy adopted for the control room. Listening position targeted at 38% of room length from the front wall.",
-      category: "Acoustics",
-      version: "seed",
-      tags: ["acoustics", "lede"],
-    },
-    {
-      id: "seed-decision-false-wall-material",
-      title: "False wall: timber, not steel",
-      description: "False wall built as a two-frame timber assembly. Steel was rejected — it transmits vibration.",
-      category: "Acoustics",
-      version: "seed",
-      tags: ["acoustics", "false-wall"],
-    },
-    {
-      id: "seed-decision-rear-diffusion",
-      title: "Rear wall diffusion spec — locked",
-      description: "2D Skyline QRD diffuser, prime 7, fd=700Hz, 40mm blocks, 228mm depth.",
-      category: "Acoustics",
-      version: "seed",
-      tags: ["acoustics", "diffusion"],
-    },
-    {
-      id: "seed-decision-furman-ruled-out",
-      title: "Furman P-2300 IT ruled out",
-      description: "Balanced power transformer explicitly ruled out for this build. Do not re-suggest. Furman PL-PLUS C E (conditioner) and PS-8RE III (sequencer) remain the confirmed power path.",
-      category: "Power",
-      version: "seed",
-      tags: ["power"],
-    },
-    {
-      id: "seed-decision-monitor-controller-location",
-      title: "Drawmer MC3.1 lives on the desk surface",
-      description: "Monitor controller sits on the desk surface, not in either rack — keep it off rack diagrams.",
-      category: "Monitoring",
-      version: "seed",
-      tags: ["monitoring", "rack"],
-    },
-    {
-      id: "seed-decision-location-change",
-      title: "Studio relocated: above carport, not under house",
-      description: "Physical build location changed from under the house to above the carport. Room footprint is expected to stay a similar size, so budget figures for acoustic treatment (Rockwool quantities, panel counts, rack/desk/signal-chain spec) are expected to hold at the category/line-item level — but exact acoustic dimensions (listening position, diffuser placement, wall treatment coordinates) are provisional until the new room is confirmed. Do not gate Budget, Planning, or Rack/Signal Chain work on the geometry redo.",
-      category: "Acoustics",
-      version: "seed",
-      resolvedDate: iso(-14),
-      tags: ["acoustics", "location", "provisional"],
-    },
+    // Section 20 — Resolved from Previous Versions
+    { id: "d-booth-side-walls", title: "Vocal booth side walls — 100mm throughout", description: "All four booth walls confirmed at 100mm RW3. Side walls upgraded from 75mm. Locked throughout — do not reduce. In a 2.48×1.97m room, low-mid buildup (200–400Hz) is the dominant problem; 100mm with a 25mm air gap controls it on all four walls.", category: "Acoustics", version: "v14", tags: ["acoustics", "booth"] },
+    { id: "d-seating-swivel-chairs", title: "Seating: swivel chairs, not a sofa", description: "Two black PU leather swivel lounge chairs confirmed, replacing a previously considered fixed sofa. A fixed sofa was rejected: asymmetrical mid-high absorptive mass would pull the stereo image toward the more reflective side, and would obstruct the Phase 5 rolling bass test walk zone.", category: "Acoustics", version: "v14", tags: ["seating", "aesthetic"] },
+    { id: "d-cask-and-carbon", title: "Cask & Carbon aesthetic — locked", description: "Full colour palette and spatial layout locked. Guitar Gallery on the right wall, TV swing-arm on the left wall, Midnight Blue velvet side panels with Dark Walnut slat accents, vocal booth designated 'Sapphire Vault' with Midnight Blue velvet and polished brass hardware.", version: "v14", tags: ["aesthetic"] },
+    { id: "d-ceiling-scatter-function", title: "Ceiling secondary panels — function", description: "Slat scatter/hybrid panels: timber slat array with Rockwool behind, forming a binary amplitude grating. Mid/high frequencies scatter off the slats, low-mids pass through the gaps and are absorbed, bass is unaffected.", category: "Acoustics", version: "v12", tags: ["acoustics", "ceiling"] },
+    { id: "d-ceiling-scatter-placement", title: "Ceiling secondary panels — placement", description: "Panel centres at 5300mm from the structural front wall, 1250mm from each respective side wall. 12° tilt. These coordinates are fixed and do NOT depend on the empirical listening position — only on verified ceiling joist positions.", category: "Acoustics", version: "v12", tags: ["acoustics", "ceiling"] },
+    { id: "d-left-rack-order", title: "Left rack top-to-bottom order", description: "UFX III (top) → Kemper → Fryette LXII → AC Infinity CLOUDPLATE #2 → SixPack (bottom). 9U used in a 12U rack.", category: "Rack", version: "v11", tags: ["rack"] },
+    { id: "d-left-rack-cooling", title: "Left rack cooling", description: "Second AC Infinity CLOUDPLATE T7-N added to the left rack, positioned directly below the Fryette LXII per the thermal rule — tube amp heat rises into the fan and exhausts out the rear.", category: "Rack", version: "v11", tags: ["rack", "thermal"] },
+    { id: "d-patchbay-model", title: "Patchbay model", description: "2 × Samson S-Patch Plus 48-point TRS patchbays. Selected for front-panel Normal/Half-Normal/Thru toggle switches.", category: "Cabling", version: "v11", tags: ["cabling", "patchbay"] },
+    { id: "d-500-series-strategy", title: "500-series module strategy", description: "Heritage Audio 73JR II ×2 (Neve-style stereo pair) + API 512c ×2 (API-style stereo pair) — slots reserved in the SixPack, purchase now active per Clean_Budget_v7_4 (previously deferred).", category: "500 Series", version: "v11", tags: ["500-series"] },
+    { id: "d-reamp-strategy", title: "Reamp box strategy", description: "Little Labs Redeye 3D Phantom = primary reamp + parallel DI splitter (owned). Palmer DACCapo = secondary / second simultaneous reamp path (owned).", category: "Guitar Rig", version: "v11", tags: ["guitar"] },
+    { id: "d-lp-derivation", title: "Listening position derivation", description: "Reference target 2661mm from the structural front wall (= 38% of the 6146mm acoustic room length, not the 6700mm structural length — room modes form between reflective boundaries, not structural surfaces). Empirical confirmation required via the Section 7A rolling bass test.", category: "Acoustics", version: "v10", tags: ["acoustics", "lp"] },
+    { id: "d-monitoring-routing", title: "Monitoring routing correction", description: "KH750 moves in-line with MC3.1 Output A → KH120 II (KH750 performs bass management internally). MC3.1 SUB/MONO output reassigned to the Avantone MixCube. HS8S paired with HS8 via HS8's own XLR through-port.", category: "Monitoring", version: "v10", tags: ["monitoring"] },
+    { id: "d-desk-architecture", title: "Desk architecture", description: "1800×780mm tiered timber-frame construction. Tasmanian oak frame + spotted gum surfaces + Forbo Nero linoleum inserts. Outsourced to a cabinetmaker.", category: "Desk", version: "v10", tags: ["desk"] },
+    { id: "d-desk-tier-heights", title: "Desk tier heights", description: "Keyboard shelf 660mm AFFL (front edge, 5° front-down tilt). S1 + Dock bay 770mm (top edge, 10° back-tilt). Rear flat tier / side zones 790mm AFFL.", category: "Desk", version: "v13", tags: ["desk"] },
+    { id: "d-a8h-axis-height", title: "A8H acoustic axis height", description: "Locked at 1700mm AFFL. Provides 106mm clearance above the TCL 50\" TV top edge. Downward tilt ~12.1°. Structural blocking centre at 1730–1750mm AFFL (accounts for 30–50mm bracket drop).", category: "Monitoring", version: "v13", tags: ["monitoring"] },
+    { id: "d-rack-integration", title: "Rack integration method", description: "Standalone racks butted against the desk sides, top plane matched to the desk side flat zones at 790mm AFFL. 20–25° angle toward the listening position (updated from 5–10°) — better acoustic performance, ergonomics, and aesthetics.", category: "Rack", version: "v13", tags: ["rack"] },
+    { id: "d-bullnose-edging", title: "Bullnose edging specification", description: "All forward-facing horizontal edges on the desk and racks: Spotted Gum 30×25mm lipping, 20mm radius. Scatters HF energy and eliminates sharp corners at wrist positions. Does not apply to rear/side edges.", category: "Desk", version: "v13", tags: ["desk", "aesthetic"] },
+    { id: "d-rack-depth", title: "Rack external depth", description: "648mm locked — aligns the rack's rear outer corner flush with the desk rear edge at 780mm from the front wall.", category: "Rack", version: "v13", tags: ["rack"] },
+    { id: "d-booth-window-w1-removed", title: "Vocal booth observation window W1 — removed", description: "Camera + screen system adopted instead of a physical observation window.", category: "Acoustics", version: "v14", tags: ["acoustics", "booth"] },
+    { id: "d-rear-wall-w3-removed", title: "Rear wall W3 window — removed", description: "Right-side diffuser panel is now a full fixed 1600mm skyline panel — the rear wall is fully solid.", category: "Acoustics", version: "v7", tags: ["acoustics"] },
+    { id: "d-diffuser-type-locked", title: "Rear wall diffuser type — locked", description: "2D Skyline QRD, prime 7, fd=700Hz, 40mm blocks, 228mm depth.", category: "Acoustics", version: "v14", tags: ["acoustics", "diffusion"] },
+    { id: "d-booth-hvac-confirmed", title: "Vocal booth HVAC — confirmed", description: "Daikin Alira FTXM25. Off during takes.", category: "HVAC", version: "v14", tags: ["hvac", "booth"] },
+    { id: "d-cable-tray-sizes", title: "Cable tray sizes — confirmed", description: "Audio tray: 200×50mm. Data tray: 100×50mm. 50mm depth is the maximum achievable — slab depth is 100mm.", category: "Cabling", version: "v14", tags: ["cabling"] },
+    { id: "d-booth-hp-volume-confirmed", title: "In-booth headphone volume control — confirmed", description: "Panel-mount passive rotary attenuator at the booth wall plate + rear wall panel. TotalMix Remote app as supplementary control.", category: "Rack", version: "v14", tags: ["headphones"] },
+    { id: "d-phantom-power-confirmed", title: "Phantom power — confirmed", description: "UFX III channels 9–12 only (front-panel combo inputs), switchable per channel. Rear-panel line inputs (1–8, TRS) have no phantom power. Townsend Sphere L22 needs 48V on both XLR lines — assigned to VB7/VB8.", category: "Control", version: "v14", tags: ["signal-chain"] },
+    { id: "d-headphone-monitoring-confirmed", title: "Headphone monitoring system — confirmed", description: "RME TotalMix FX zero-latency hardware DSP. Behringer HA8000 in the right rack (see the Stage 8 RNHP-vs-HA8000 conflict item — Clean_Budget_v7_4 has since proposed an RNHP upgrade). Sony MDR-7506 + Beyerdynamic DT770 Pro 80Ω in the booth.", category: "Rack", version: "v14", tags: ["headphones"] },
+    { id: "d-rear-panel-confirmed", title: "Rear wall recording panel — confirmed", description: "6× XLR in + 2× headphone send + panel-mount volume control. Right side of the D2 door. Independent home run to the rack, not daisy-chained.", category: "Cabling", version: "v14", tags: ["cabling"] },
+    { id: "d-smart-lighting-confirmed", title: "Smart lighting (control room) — confirmed", description: "Smart lighting system, not conventional dimmer switches — leading-edge dimmers cause electrical noise.", category: "Lighting", version: "v14", tags: ["lighting"] },
+    { id: "d-rack-angle-updated", title: "Rack angle — updated to 20–25°", description: "Updated from an earlier 5–10° figure. Better acoustic performance, ergonomics, and aesthetics.", category: "Rack", version: "v14", tags: ["rack"] },
+    { id: "d-rug-spec-resolved", title: "Acoustic rug specification", description: "3.5m × 4.5m, 100% wool pile on dense felt underlay, dark charcoal or deep grey colour. Beige explicitly rejected — the Studio Colour Palette document's 'solid beige rug' conflicts with the acoustic spec and the Cask & Carbon base colour theme; the acoustic spec takes precedence.", category: "Flooring", version: "v10", tags: ["acoustics", "flooring"] },
+
+    // Notable LOCKED constraints stated in the document body but not listed
+    // as formal Section 20 entries — still important enough not to reopen.
+    { id: "d-furman-ruled-out", title: "Furman P-2300 IT — ruled out", description: "Balanced isolation transformer explicitly ruled out as unnecessary. Do not re-suggest. Furman PL-PLUS C E (conditioner) and PS-8RE III (sequencer) remain the confirmed power path.", category: "Power", version: "v14", tags: ["power"] },
+    { id: "d-false-wall-timber", title: "False wall: timber, not steel", description: "Frames built from timber throughout — steel transmits vibration and creates flanking paths. Frames fixed to floor/ceiling track only, never into the structural wall.", category: "Acoustics", version: "v14", tags: ["acoustics", "false-wall"] },
+    { id: "d-a8h-not-on-false-wall", title: "A8H mounts on the structural wall, never the false wall", description: "A8H wall-mounted speaker arms are fixed to the structural wall, with vibration isolation at the bracket. Do not fix to false wall Frame 1 or Frame 2 under any circumstances.", category: "Monitoring", version: "v14", tags: ["monitoring", "false-wall"] },
+    { id: "d-mc3-1-desktop", title: "Drawmer MC3.1 lives on the desk surface", description: "Monitor controller is a desktop unit only, NOT rack-mounted. Physical location: left desk flat zone, beside the S1 bay. Keep it off rack diagrams.", category: "Monitoring", version: "v14", tags: ["monitoring", "rack"] },
+    { id: "d-no-second-nearfield", title: "No second nearfield option under consideration", description: "KH120 II + KH750 is the complete and final nearfield system. HS8S is owned and retained as part of the translation chain (paired with HS8) — it is NOT a second KH120 II sub.", category: "Monitoring", version: "v14", tags: ["monitoring"] },
   ];
   return decisions.map((d) => ({ ...d, createdAt: now, updatedAt: now }));
 }
 
 export function buildDemoBudget(): BudgetLineItem[] {
-  // One placeholder line per category, seeded at $0 with sourceVersion
-  // flagged as "seed" — replace via Settings → Import Budget once
-  // Clean_Budget_v4 figures for the confirmed room are available.
-  const rows: Array<[string, number, number, number, boolean]> = [
-    ["Monitoring", 6460, 9605, 12800, false],
-    ["Control", 1800, 4100, 6400, false],
-    ["500 Series", 3200, 5100, 7000, false],
-    ["Microphones", 2050, 3115, 4500, false],
-    ["Guitar Rig", 1560, 2300, 3600, false],
-    ["Cabling", 1945, 2782, 3620, false],
-    ["Acoustics", 3100, 10300, 17500, true],
-    ["Desk", 1800, 7550, 13500, false],
-    ["Power", 650, 3325, 6000, false],
-    ["Rack", 470, 1195, 1900, false],
-    ["Network / Data", 0, 0, 0, false],
+  // All 67 real line items from Clean_Budget_v7_4.xlsx. budgetLow = Budget
+  // Option Total, budgetHigh = Preferred Option Total, budgetMid = midpoint
+  // of the two — the sheet itself has no single "mid" column, since each
+  // line is really two distinct product choices (a preferred pick and a
+  // cheaper alternative), not one item priced across a low/mid/high range.
+  // Reference-only lines (Qty 0 in the source, e.g. the Audient EVO 16
+  // budget-alt interface) are excluded — the sheet's own subtotals exclude
+  // them too. A few lines are tagged FLAGGED where their Total doesn't
+  // reconcile with Unit × Qty in the source spreadsheet — imported as
+  // printed, not corrected, since intent is ambiguous.
+  const rows: Array<Omit<BudgetLineItem, "id" | "createdAt" | "updatedAt">> = [
+    { category: "Monitoring", name: "Adam A8H (pair)", budgetLow: 2200, budgetMid: 3600, budgetHigh: 5000, committed: 0, actual: 0, notes: "Preferred: Adam Audio — Budget option: Adam A7V (pair) — Main monitors", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Monitoring", name: "Neumann KH120 II (pair)", budgetLow: 1400, budgetMid: 2300, budgetHigh: 3200, committed: 0, actual: 0, notes: "Preferred: Neumann — Budget option: Neumann KH80 DSP (pair) — Nearfields", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Monitoring", name: "Yamaha HS8 (pair)", budgetLow: 0, budgetMid: 0, budgetHigh: 0, committed: 0, actual: 0, notes: "Preferred: Existing — Already owned", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Monitoring", name: "Neumann KH750 Sub", budgetLow: 2500, budgetMid: 2750, budgetHigh: 3000, committed: 0, actual: 0, notes: "Preferred: Neumann — Budget option: Neumann KH750 — Subwoofer", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Monitoring", name: "Avantone MixCube", budgetLow: 120, budgetMid: 310, budgetHigh: 500, committed: 0, actual: 0, notes: "Preferred: Avantone — Budget option: Behringer C50A — Mono", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Monitoring", name: "Mounts + Isolation", budgetLow: 200, budgetMid: 550, budgetHigh: 900, committed: 0, actual: 0, notes: "Preferred: K&M + IsoAcoustics — Budget option: Foam + generic mounts — Wall + iso", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Monitoring", name: "IsoAcoustics Risers KH120", budgetLow: 40, budgetMid: 120, budgetHigh: 200, committed: 0, actual: 0, notes: "Preferred: IsoAcoustics ISO-L8R155 — Budget option: Generic foam pads — Monitor height alignment", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Control", name: "Drawmer MC3.1", budgetLow: 900, budgetMid: 1550, budgetHigh: 2200, committed: 0, actual: 0, notes: "Preferred: Drawmer MC3.1 — Budget option: Drawmer MC2.1 — LOCKED - MC3.1, 3 stereo + mono", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Control", name: "Audio Interface", budgetLow: 900, budgetMid: 2550, budgetHigh: 4200, committed: 0, actual: 0, notes: "Preferred: RME Fireface UFX III — Budget option: Audient iD44 MKII — Preferred - best routing for complex setup", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Control", name: "Avid S1 Controller", budgetLow: 2300, budgetMid: 3750, budgetHigh: 5200, committed: 0, actual: 0, notes: "Preferred: Avid S1 ×2 / ×1 budget — Budget option: Avid S1 ×1 — Preferred: 2x S1 (16 faders) / Budget: 1x S1 (8 faders) — EUCON control surface", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Control", name: "Avid Dock", budgetLow: 1700, budgetMid: 1850, budgetHigh: 2000, committed: 0, actual: 0, notes: "Preferred: Avid Dock — Budget option: Avid Dock — EUCON transport, jog wheel, soft keys — pairs with S1 + tablet", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Control", name: "iPad (Avid Control app)", budgetLow: 800, budgetMid: 1300, budgetHigh: 1800, committed: 0, actual: 0, notes: "Preferred: Apple iPad 10th Gen ×2 / ×1 — Budget option: Apple iPad 10th Gen ×1 — Preferred: 2x iPad / Budget: 1x iPad — Avid Control app (free); iPads not included with S1 or Dock", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "500 Series", name: "500 Rack (Chassis)", budgetLow: 600, budgetMid: 800, budgetHigh: 1000, committed: 0, actual: 0, notes: "Preferred: Radial Workhorse SixPack — Budget option: Radial Workhorse 500 (entry chassis) — PLANNED v11 — Radial Workhorse SixPack confirmed as 500-series chassis. NOT yet purchased.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "500 Series", name: "Neve-style Preamp (500-series)", budgetLow: 1400, budgetMid: 2100, budgetHigh: 2800, committed: 0, actual: 0, notes: "Preferred: Heritage Audio 73JR II — Budget option: Warm Audio WA73-EQ x2 — Heritage 73JR II stereo pair for SixPack slots 1-2. Purchase active — not deferred.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "500 Series", name: "API-style Preamp (500-series)", budgetLow: 1200, budgetMid: 2200, budgetHigh: 3200, committed: 0, actual: 0, notes: "Preferred: API 512c — Budget option: Lindell 506 x2 — API 512c stereo pair for SixPack slots 3-4. Purchase active — not deferred.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Microphones", name: "SM57", budgetLow: 600, budgetMid: 500, budgetHigh: 400, committed: 0, actual: 0, notes: "Preferred: Shure — Budget option: Shure SM57 x2 — Guitar", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Microphones", name: "Sennheiser MD421", budgetLow: 150, budgetMid: 425, budgetHigh: 700, committed: 0, actual: 0, notes: "Preferred: Sennheiser — Budget option: Shure SM57 (2nd) — Guitar alt", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Microphones", name: "Ribbon Mic", budgetLow: 1100, budgetMid: 1900, budgetHigh: 2700, committed: 0, actual: 0, notes: "Preferred: Royer R121 — Budget option: AEA R84 Ribbon — High-end", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Microphones", name: "Shure SM7B", budgetLow: 200, budgetMid: 450, budgetHigh: 700, committed: 0, actual: 0, notes: "Preferred: Shure — Budget option: Rode Podcaster — Vocals", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Microphones", name: "Other Mics", budgetLow: 0, budgetMid: 0, budgetHigh: 0, committed: 0, actual: 0, notes: "Preferred: Existing — Townsend etc", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Guitar Rig", name: "Power Amp (Guitar)", budgetLow: 1400, budgetMid: 2300, budgetHigh: 3200, committed: 0, actual: 0, notes: "Preferred: Fryette LXII — Budget option: Fryette Power Station — Preferred - pending final budget review", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Guitar Rig", name: "Speaker Cables", budgetLow: 160, budgetMid: 280, budgetHigh: 400, committed: 0, actual: 0, notes: "Preferred: Custom — Budget option: Generic 12AWG cables — Long runs", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Guitar Rig", name: "Re-amp Boxes (Palmer + Redeye, Owned)", budgetLow: 0, budgetMid: 0, budgetHigh: 0, committed: 0, actual: 0, notes: "Preferred: Palmer DACCapo + Little Labs Redeye 3D — OWNED v11 — Both reamp boxes confirmed. Redeye = PRIMARY, DACCapo = SECONDARY.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Cabling", name: "XLR (Star Quad)", budgetLow: 500, budgetMid: 1000, budgetHigh: 1500, committed: 0, actual: 0, notes: "Preferred: Mogami/Canare — Budget option: Canare L-4E6S — Booth + room, star quad throughout. Preferred: Mogami W2534.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Cabling", name: "Patch Cables (TRS, front-panel)", budgetLow: 150, budgetMid: 375, budgetHigh: 600, committed: 0, actual: 0, notes: "Preferred: Mogami Gold / Canare GS-6 — Budget option: Hosa TRS patch cables — LOCKED v11 — 12 x 1.5ft + 6 x 3ft for front-panel repatching at the Samson patchbays.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Cabling", name: "Infrastructure", budgetLow: 100, budgetMid: 300, budgetHigh: 500, committed: 0, actual: 0, notes: "Preferred: Wall plates etc — Budget option: DIY wall plates — Clean install", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Cabling", name: "Patchbay (2 × Samson S-Patch Plus)", budgetLow: 440, budgetMid: 500, budgetHigh: 560, committed: 0, actual: 0, notes: "Preferred: Samson S-Patch Plus (LOCKED v11) — 96 patch points total, front-panel Normal/Half-Normal/Thru toggles. Right rack slots 1-2.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Cabling", name: "Snake / Multicore + DB25 Fanouts", budgetLow: 300, budgetMid: 575, budgetHigh: 850, committed: 0, actual: 0, notes: "Preferred: Mogami Gold / Pro Co Sound — UPDATED v11 — Star-quad wall-to-rack snakes (booth 12ch + rear wall 8ch), 2× DB25 fanouts for the SixPack, short TRS cables for UFX/Kemper rack wiring.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Acoustics", name: "Bass Traps", budgetLow: 800, budgetMid: 2400, budgetHigh: 4000, committed: 0, actual: 0, notes: "Preferred: Corner traps — Budget option: DIY Rockwool traps — Low freq control", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Acoustics", name: "Panels", budgetLow: 800, budgetMid: 2900, budgetHigh: 5000, committed: 0, actual: 0, notes: "Preferred: Broadband — Budget option: DIY broadband panels — Walls", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Acoustics", name: "Ceiling Cloud", budgetLow: 400, budgetMid: 1200, budgetHigh: 2000, committed: 0, actual: 0, notes: "Preferred: Custom — Budget option: DIY cloud frame — Over desk", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Acoustics", name: "Diffusion", budgetLow: 500, budgetMid: 1750, budgetHigh: 3000, committed: 0, actual: 0, notes: "Preferred: QRD — Budget option: Skyline diffusers — Rear wall", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Acoustics", name: "Slat Panels", budgetLow: 200, budgetMid: 850, budgetHigh: 1500, committed: 0, actual: 0, notes: "Preferred: Decorative — Budget option: Timber slats DIY — Aesthetic", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Acoustics", name: "Booth Acoustic Treatment", budgetLow: 400, budgetMid: 1200, budgetHigh: 2000, committed: 0, actual: 0, notes: "Preferred: Bass traps + panels — Budget option: DIY booth panels — Vocal booth treatment", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "HVAC", name: "Split System A/C", budgetLow: 0, budgetMid: 0, budgetHigh: 0, committed: 0, actual: 0, notes: "Preferred: Daikin (Owned - Studio) — Already owned for main studio", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "HVAC", name: "Split System A/C (Vocal Booth)", budgetLow: 1200, budgetMid: 1850, budgetHigh: 2500, committed: 0, actual: 0, notes: "Preferred: Daikin Alira FTXM25 (CONFIRMED) — Budget option: Omit booth A/C — Off during takes. Supply and install estimate.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "HVAC", name: "Acoustic Duct Baffling", budgetLow: 500, budgetMid: 1750, budgetHigh: 3000, committed: 0, actual: 0, notes: "Preferred: Custom — Budget option: DIY acoustic baffling — Noise isolation for ducts", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "HVAC", name: "Ventilation / Fresh Air", budgetLow: 200, budgetMid: 850, budgetHigh: 1500, committed: 0, actual: 0, notes: "Preferred: ERV / HRV — Budget option: Passive ventilation — Sealed room air exchange", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Desk", name: "Custom Desk", budgetLow: 1500, budgetMid: 6750, budgetHigh: 12000, committed: 0, actual: 0, notes: "Preferred: Builder — Budget option: IKEA/flat pack custom — Main desk", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Desk", name: "Chair", budgetLow: 300, budgetMid: 900, budgetHigh: 1500, committed: 0, actual: 0, notes: "Preferred: Ergonomic — Budget option: Secretlab / gaming chair — Comfort", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Power", name: "Furman PL-PLUS C E", budgetLow: 650, budgetMid: 750, budgetHigh: 850, committed: 0, actual: 0, notes: "Preferred: Furman — CONFIRMED — rack power conditioner (P-2300 IT ruled out)", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Power", name: "Electrical Setup", budgetLow: 300, budgetMid: 900, budgetHigh: 1500, committed: 0, actual: 0, notes: "Preferred: Wiring — Budget option: DIY star ground wiring — Install", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Rack", name: "Furman PS-8RE III", budgetLow: 350, budgetMid: 775, budgetHigh: 1200, committed: 0, actual: 0, notes: "Preferred: Furman — Power sequencer for monitors", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Rack", name: "Rack Cooling Fan × 2 (one per rack)", budgetLow: 500, budgetMid: 570, budgetHigh: 640, committed: 0, actual: 0, notes: "Preferred: AC Infinity CLOUDPLATE T7-N — UPDATED v11 — Qty bumped from 1 to 2, one per rack. Right rack above the Furman conditioner, left rack below the Fryette LXII per the thermal rule.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Rack", name: "Rack Accessories (1U panels etc)", budgetLow: 40, budgetMid: 120, budgetHigh: 200, committed: 0, actual: 0, notes: "Preferred: Various — Budget option: Generic 1U blanks — Blanks, vents, cable mgmt", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Rack", name: "Headphone Amplifier — Primary (Control Room)", budgetLow: 250, budgetMid: 600, budgetHigh: 950, committed: 0, actual: 0, notes: "Preferred: Rupert Neve Designs RNHP — Budget option: Behringer Powerplay HA8000 — UPDATED v7.4 — Upgraded to RNHP for reference-grade quality; conflicts with Master Summary v14's HA8000 spec, see the flagged Stage 8 decision item.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Rack", name: "Headphones — Primary", budgetLow: 180, budgetMid: 200, budgetHigh: 220, committed: 0, actual: 0, notes: "Preferred: Sony MDR-7506 — Closed-back — vocal booth", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Rack", name: "Headphones — Secondary", budgetLow: 100, budgetMid: 200, budgetHigh: 300, committed: 0, actual: 0, notes: "Preferred: Beyerdynamic DT770 Pro 80Ω — Budget option: Audio-Technica ATH-M40x — Alternative pair for performers", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Rack", name: "Headphone Cable Run", budgetLow: 40, budgetMid: 80, budgetHigh: 120, committed: 0, actual: 0, notes: "Preferred: Shielded TRS — Neutrik term. — 10-15m booth run — install during construction", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Rack", name: "In-booth headphone volume control", budgetLow: 20, budgetMid: 70, budgetHigh: 120, committed: 0, actual: 0, notes: "Preferred: Passive panel-mount attenuator — Wired into the booth wall plate headphone circuit.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Rack", name: "Talkback Mic (desk-mounted)", budgetLow: 50, budgetMid: 85, budgetHigh: 120, committed: 0, actual: 0, notes: "Preferred: Shure PGA48 / SE Electronics V7 — Feeds UFX III talkback input — required for booth comms.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Microphones", name: "Mic Stands + Boom Arms", budgetLow: 160, budgetMid: 440, budgetHigh: 720, committed: 0, actual: 0, notes: "Preferred: K&M 210/9 + K&M 23850 — NEW v7.4 — 4x stands: 2x boom for guitar cab, 1x desk arm for SM7B, 1x for the vocal booth L22.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Cabling", name: "Cable Labelling + Management", budgetLow: 40, budgetMid: 95, budgetHigh: 150, committed: 0, actual: 0, notes: "Preferred: Brother P-Touch + heat shrink labels — NEW v7.4 — Cable ID labels for all rack and wall runs.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Lighting", name: "Smart Lighting — Control Room (6 zones)", budgetLow: 300, budgetMid: 750, budgetHigh: 1200, committed: 0, actual: 0, notes: "Preferred: Shelly / Lutron Caseta + 2700K LED fittings — NEW v7.4 — 6-zone control room, 2700K warm white throughout. Electrician to install per zones confirmed with Richard Hammond.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Lighting", name: "Smart Lighting — Vocal Booth (3 zones)", budgetLow: 100, budgetMid: 250, budgetHigh: 400, committed: 0, actual: 0, notes: "Preferred: Shelly / Lutron Caseta + 2700K LEDs — NEW v7.4 — Zone 1 ceiling halo, Zone 2 performance light. Smart dimming only.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Flooring", name: "Vinyl Plank Flooring", budgetLow: 600, budgetMid: 1050, budgetHigh: 1500, committed: 0, actual: 0, notes: "Preferred: Commercial-grade LVP 5mm+ — NEW v7.4 — Confirmed flooring decision April 2026.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Flooring", name: "Wool Rug (mix position)", budgetLow: 600, budgetMid: 1550, budgetHigh: 2500, committed: 0, actual: 0, notes: "Preferred: 100% wool, made-to-order — NEW v7.4 — ~3500×4500mm, pile 10-14mm, density ≥2500 g/m². 6-12 week lead time.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Flooring", name: "Dense Felt Underlay", budgetLow: 100, budgetMid: 250, budgetHigh: 400, committed: 0, actual: 0, notes: "Preferred: Commercial acoustic felt underlay — NEW v7.4 — 8-12mm, NOT foam.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Build", name: "Acoustic Door", budgetLow: 40, budgetMid: 95, budgetHigh: 150, committed: 0, actual: 0, notes: "Preferred: Specialist — Budget option: DIY acoustic door seal — Soundproofing — FLAGGED: this line's Total in Clean_Budget_v7_4 doesn't reconcile with Unit × Qty in the source sheet — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Build", name: "Front false wall", budgetLow: 0, budgetMid: 0, budgetHigh: 0, committed: 0, actual: 0, notes: "Preferred: Custom — Budget option: Front false wall — DIY — FLAGGED: this line's Total in Clean_Budget_v7_4 doesn't reconcile with Unit × Qty in the source sheet — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Network / Data", name: "Cat6A cable run (house to studio)", budgetLow: 100, budgetMid: 250, budgetHigh: 400, committed: 0, actual: 0, notes: "Preferred: Structured cabling — Run during construction — FLAGGED: this line's Total doesn't reconcile with Unit × Qty — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Network / Data", name: "Switch + data points + ceiling AP", budgetLow: 0, budgetMid: 0, budgetHigh: 0, committed: 0, actual: 0, notes: "Preferred: Ubiquiti / TP-Link — Avid S1/Dock require wired ethernet — FLAGGED: this line's Total doesn't reconcile with Unit × Qty — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Network / Data", name: "HDMI-over-Cat6A extender kit", budgetLow: 600, budgetMid: 1050, budgetHigh: 1500, committed: 0, actual: 0, notes: "Preferred: Monoprice / Lenkeng — Transmitter + receiver for the booth screen — FLAGGED: this line's Total doesn't reconcile with Unit × Qty — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Network / Data", name: "USB-over-Cat6A extender kit", budgetLow: 600, budgetMid: 1550, budgetHigh: 2500, committed: 0, actual: 0, notes: "Preferred: StarTech / Icron — Keyboard/mouse/webcam from the booth wall plate — FLAGGED: this line's Total doesn't reconcile with Unit × Qty — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Network / Data", name: "Desk data floor box — 4x RJ45", budgetLow: 100, budgetMid: 250, budgetHigh: 400, committed: 0, actual: 0, notes: "Preferred: Clipsal / custom — Recessed at the desk for Avid S1 ×2, Dock, computer ethernet — FLAGGED: this line's Total doesn't reconcile with Unit × Qty — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Network / Data", name: "Booth wall plate — 2x RJ45", budgetLow: 0, budgetMid: 0, budgetHigh: 0, committed: 0, actual: 0, notes: "Preferred: Clipsal / Leviton — Camera PoE, general use — FLAGGED: this line's Total doesn't reconcile with Unit × Qty — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
+    { category: "Network / Data", name: "Storage room data point — 1x RJ45", budgetLow: 400, budgetMid: 2200, budgetHigh: 4000, committed: 0, actual: 0, notes: "Preferred: Clipsal / Leviton — Managed switch location, house router extension terminates here — FLAGGED: this line's Total doesn't reconcile with Unit × Qty — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
   ];
-  return rows.map(([category, budgetLow, budgetMid, budgetHigh, provisional]) => ({
-    id: `seed-budget-${String(category).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
-    category,
-    name: `${category} — category total (seed)`,
-    budgetLow,
-    budgetMid,
-    budgetHigh,
-    committed: 0,
-    actual: 0,
-    provisional,
-    notes: "Seed figure — not from Clean_Budget_v4. Replace with real line items via Settings → Import Budget.",
-    sourceVersion: "seed",
+
+  return rows.map((r, i) => ({
+    ...r,
+    id: `budget-${i}-${r.category}-${r.name}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
     createdAt: now,
     updatedAt: now,
   }));

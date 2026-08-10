@@ -46,6 +46,13 @@ export const CATEGORIES = [
   "Rack",
   "Power",
   "Network / Data",
+  // Budget-only categories added in Clean_Budget_v7_4 — construction/fit-out
+  // spend with no equipment record in the Inventory app, so no area there
+  // to stay in sync with.
+  "HVAC",
+  "Lighting",
+  "Flooring",
+  "Build",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
@@ -91,7 +98,7 @@ export interface ProjectItem {
   category?: Category | string;
   dependsOn: string[]; // ids of ProjectItems that block this one
   gearItemId?: string; // reference into the Inventory app's GearItem.id (type === "gear")
-  provisional?: boolean; // true = dimension/geometry data is TBD pending the carport-relocation room confirmation
+  provisional?: boolean; // true = dimension/geometry data isn't finalized yet (e.g. pending empirical listening-position confirmation, a bracket spec sheet, or a room reconfirmation)
   sourceVersion?: string; // provenance, e.g. "Master Summary v14" or "Planning Agent"
   createdAt: string;
   updatedAt: string;
@@ -131,11 +138,11 @@ export interface BudgetLineItem {
   budgetHigh: number;
   committed: number; // ordered, price locked in, not yet paid
   actual: number; // paid
-  provisional?: boolean; // quantity/spec may shift with the carport relocation before dimensions are locked
+  provisional?: boolean; // quantity/spec may still shift before it's locked
   notes?: string;
   linkedItemId?: string; // optional ProjectItem id this line funds
   gearItemId?: string; // optional Inventory app GearItem id this line funds
-  sourceVersion?: string; // e.g. "Clean_Budget_v4"
+  sourceVersion?: string; // e.g. "Clean_Budget_v7_4"
   createdAt: string;
   updatedAt: string;
 }
