@@ -28,6 +28,12 @@ import { BudgetLineItem, Decision, ProjectItem } from "../types";
 //   - A handful of Build and Network/Data budget lines have a Total that
 //     doesn't reconcile with Unit × Qty in the source spreadsheet — each is
 //     tagged FLAGGED in its notes; the Total value is imported as printed.
+//   - Neither document prices the base building structure itself — both are
+//     scoped to fit-out, acoustic treatment, and equipment. The "Construction
+//     Shell" budget category below is a placeholder John asked for
+//     (2026-08-10): round, illustrative figures with no builder's quote or
+//     comparable behind them. Replace every line the moment a real quote
+//     exists.
 
 const now = new Date().toISOString();
 
@@ -256,6 +262,23 @@ export function buildDemoBudget(): BudgetLineItem[] {
     { category: "Flooring", name: "Dense Felt Underlay", budgetLow: 100, budgetMid: 250, budgetHigh: 400, committed: 0, actual: 0, notes: "Preferred: Commercial acoustic felt underlay — NEW v7.4 — 8-12mm, NOT foam.", sourceVersion: "Clean_Budget_v7_4" },
     { category: "Build", name: "Acoustic Door", budgetLow: 40, budgetMid: 95, budgetHigh: 150, committed: 0, actual: 0, notes: "Preferred: Specialist — Budget option: DIY acoustic door seal — Soundproofing — FLAGGED: this line's Total in Clean_Budget_v7_4 doesn't reconcile with Unit × Qty in the source sheet — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
     { category: "Build", name: "Front false wall", budgetLow: 0, budgetMid: 0, budgetHigh: 0, committed: 0, actual: 0, notes: "Preferred: Custom — Budget option: Front false wall — DIY — FLAGGED: this line's Total in Clean_Budget_v7_4 doesn't reconcile with Unit × Qty in the source sheet — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
+
+    // Construction Shell — PLACEHOLDER, not from Clean_Budget_v7_4 or Master
+    // Summary v14. Neither document prices the base structure itself — the
+    // real budget is 100% fit-out, acoustic treatment, and equipment. These
+    // are round, illustrative numbers with no quote or comparable behind
+    // them, added only so the shell isn't invisible on the dashboard.
+    // Replace every line here with real figures the moment a builder's
+    // quote exists — until then, don't treat these as a real budget.
+    { category: "Construction Shell", name: "Slab & footings", budgetLow: 8000, budgetMid: 12000, budgetHigh: 18000, committed: 0, actual: 0, provisional: true, notes: "PLACEHOLDER — no builder's quote yet. Illustrative only, not sized to this specific build.", sourceVersion: "Placeholder — awaiting builder's quote" },
+    { category: "Construction Shell", name: "Structural framing", budgetLow: 15000, budgetMid: 22000, budgetHigh: 30000, committed: 0, actual: 0, provisional: true, notes: "PLACEHOLDER — no builder's quote yet. Timber or steel frame for the above-carport structure.", sourceVersion: "Placeholder — awaiting builder's quote" },
+    { category: "Construction Shell", name: "Roof structure & covering", budgetLow: 10000, budgetMid: 15000, budgetHigh: 22000, committed: 0, actual: 0, provisional: true, notes: "PLACEHOLDER — no builder's quote yet.", sourceVersion: "Placeholder — awaiting builder's quote" },
+    { category: "Construction Shell", name: "External walls & cladding", budgetLow: 8000, budgetMid: 14000, budgetHigh: 20000, committed: 0, actual: 0, provisional: true, notes: "PLACEHOLDER — no builder's quote yet. Structural insulation and weatherproofing, not the internal acoustic treatment (see Acoustics category).", sourceVersion: "Placeholder — awaiting builder's quote" },
+    { category: "Construction Shell", name: "Structural doors & windows", budgetLow: 3000, budgetMid: 5000, budgetHigh: 8000, committed: 0, actual: 0, provisional: true, notes: "PLACEHOLDER — no builder's quote yet. External-facing openings, distinct from the D2 acoustic door already costed under Build.", sourceVersion: "Placeholder — awaiting builder's quote" },
+    { category: "Construction Shell", name: "Site works & access", budgetLow: 3000, budgetMid: 6000, budgetHigh: 10000, committed: 0, actual: 0, provisional: true, notes: "PLACEHOLDER — no builder's quote yet. Excavation, drainage, access for construction.", sourceVersion: "Placeholder — awaiting builder's quote" },
+    { category: "Construction Shell", name: "Building permit & compliance fees", budgetLow: 1500, budgetMid: 3000, budgetHigh: 5000, committed: 0, actual: 0, provisional: true, notes: "PLACEHOLDER — no real figure yet. CTF levy, Building Permit application, inspections — see the Stage 0 tasks on the Board.", sourceVersion: "Placeholder — awaiting builder's quote" },
+    { category: "Construction Shell", name: "Builder's margin / contingency", budgetLow: 8000, budgetMid: 15000, budgetHigh: 25000, committed: 0, actual: 0, provisional: true, notes: "PLACEHOLDER — no builder's quote yet. Round contingency figure on top of the other Construction Shell lines above.", sourceVersion: "Placeholder — awaiting builder's quote" },
+
     { category: "Network / Data", name: "Cat6A cable run (house to studio)", budgetLow: 100, budgetMid: 250, budgetHigh: 400, committed: 0, actual: 0, notes: "Preferred: Structured cabling — Run during construction — FLAGGED: this line's Total doesn't reconcile with Unit × Qty — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
     { category: "Network / Data", name: "Switch + data points + ceiling AP", budgetLow: 0, budgetMid: 0, budgetHigh: 0, committed: 0, actual: 0, notes: "Preferred: Ubiquiti / TP-Link — Avid S1/Dock require wired ethernet — FLAGGED: this line's Total doesn't reconcile with Unit × Qty — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },
     { category: "Network / Data", name: "HDMI-over-Cat6A extender kit", budgetLow: 600, budgetMid: 1050, budgetHigh: 1500, committed: 0, actual: 0, notes: "Preferred: Monoprice / Lenkeng — Transmitter + receiver for the booth screen — FLAGGED: this line's Total doesn't reconcile with Unit × Qty — verify before treating as final.", sourceVersion: "Clean_Budget_v7_4" },

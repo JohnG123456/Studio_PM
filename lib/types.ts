@@ -53,6 +53,10 @@ export const CATEGORIES = [
   "Lighting",
   "Flooring",
   "Build",
+  // Not from Clean_Budget_v7_4 at all — placeholder figures for the base
+  // structure itself, added because the real budget only ever covers fit-out
+  // (see the "Construction Shell" lines in demoData.ts for the caveat).
+  "Construction Shell",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];

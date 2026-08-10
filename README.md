@@ -144,6 +144,18 @@ in-app, not just in this file:
   notes — worth checking against the live spreadsheet before treating as
   final.
 
+**"Construction Shell" budget category — placeholder, not sourced from
+either document.** Neither Master Summary v14 nor Clean_Budget_v7_4 prices
+the base building structure — both are scoped entirely to fit-out, acoustic
+treatment, and equipment. At John's request (2026-08-10), `demoData.ts` adds
+eight round, illustrative line items (slab & footings, structural framing,
+roof, external walls & cladding, structural doors/windows, site works,
+building permit/compliance fees, builder's margin) so the shell isn't
+invisible on the dashboard — currently ~$56.5k low / $92k mid / $138k high.
+None of these numbers come from a quote or comparable; every line is tagged
+`provisional: true` and `sourceVersion: "Placeholder — awaiting builder's
+quote"`. Replace them the moment a real builder's quote exists.
+
 Because this is `localStorage` seed data, a browser that already loaded an
 earlier build of this app keeps its old data — Settings → *Reset to seed
 data* pulls in whatever `demoData.ts` currently contains.
