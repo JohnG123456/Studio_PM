@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import { DataProvider } from "@/lib/data/DataProvider";
-import { AppShell } from "@/components/AppShell";
 
 const bodyFont = Inter({
   variable: "--font-body",
@@ -38,9 +37,7 @@ export default function RootLayout({
       className={`${bodyFont.variable} ${displayFont.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <DataProvider>
-          <AppShell>{children}</AppShell>
-        </DataProvider>
+        <DataProvider>{children}</DataProvider>
       </body>
     </html>
   );

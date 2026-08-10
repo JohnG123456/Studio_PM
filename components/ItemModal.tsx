@@ -5,6 +5,7 @@ import { useData } from "@/lib/data/DataProvider";
 import { CATEGORIES, ITEM_STATUS_LABELS, ItemStatus, ItemType, NewProjectItem, ProjectItem, STAGES } from "@/lib/types";
 import { FieldLabel, PlainInput, PlainSelect, PlainTextarea, PrimaryButton, SecondaryButton } from "./FormControls";
 import { IconTrash, IconX } from "./icons";
+import { getErrorMessage } from "@/lib/errors";
 
 const STATUS_OPTIONS: ItemStatus[] = ["not_started", "in_progress", "submitted", "approved", "blocked", "done"];
 const TYPE_OPTIONS: ItemType[] = ["task", "gear", "decision"];
@@ -18,7 +19,7 @@ export function ItemModal({
   defaultStage?: number;
   onClose: () => void;
 }) {
-  const { items, addItem, updateItem, deleteItem, gearSnapshot } = useData();
+  const { items, addItem, updateItem, deleteItem, availableGearItems, gearSource } = useData();
   const isEdit = Boolean(item);
 
   const [name, setName] = useState(item?.name ?? "");
@@ -32,6 +33,7 @@ export function ItemModal({
   const [gearItemId, setGearItemId] = useState(item?.gearItemId ?? "");
   const [provisional, setProvisional] = useState(item?.provisional ?? false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -46,6 +48,7 @@ export function ItemModal({
   async function handleSave() {
     if (!name.trim()) return;
     setSaving(true);
+    setError(null);
     const payload: NewProjectItem = {
       name: name.trim(),
       type,
@@ -59,20 +62,29 @@ export function ItemModal({
       provisional,
       sourceVersion: item?.sourceVersion,
     };
-    if (isEdit && item) {
-      updateItem(item.id, payload);
-    } else {
-      addItem(payload);
+    try {
+      if (isEdit && item) {
+        await updateItem(item.id, payload);
+      } else {
+        await addItem(payload);
+      }
+      onClose();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    onClose();
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!item) return;
     if (!confirm(`Delete "${item.name}"? Any items depending on it will be unblocked.`)) return;
-    deleteItem(item.id);
-    onClose();
+    try {
+      await deleteItem(item.id);
+      onClose();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
   }
 
   return (
@@ -148,12 +160,20 @@ export function ItemModal({
 
           {type === "gear" && (
             <div>
-              <FieldLabel hint={gearSnapshot ? `${gearSnapshot.items.length} items available` : "Import a gear snapshot in Settings first"}>
+              <FieldLabel
+                hint={
+                  availableGearItems.length > 0
+                    ? `${availableGearItems.length} items ${gearSource === "live" ? "synced live" : "available"}`
+                    : gearSource === "live"
+                      ? "No gear found in your Inventory app account yet"
+                      : "Import a gear snapshot in Settings first"
+                }
+              >
                 Linked Inventory item
               </FieldLabel>
               <PlainSelect value={gearItemId} onChange={(e) => setGearItemId(e.target.value)}>
                 <option value="">— none —</option>
-                {(gearSnapshot?.items ?? []).map((g) => (
+                {availableGearItems.map((g) => (
                   <option key={g.id} value={g.id}>
                     {g.name} {g.brand ? `(${g.brand})` : ""}
                   </option>
@@ -188,6 +208,8 @@ export function ItemModal({
             <PlainTextarea value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
         </div>
+
+        {error && <p className="mt-3 text-xs text-danger">{error}</p>}
 
         <div className="mt-5 flex items-center justify-between gap-2">
           {isEdit ? (

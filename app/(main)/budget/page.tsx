@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useData } from "@/lib/data/DataProvider";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -158,13 +158,24 @@ function LineRow({
 }) {
   const variance = lineVariance(line);
   const ctc = lineCostToComplete(line);
+  const [name, setName] = useState(line.name);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the local edit buffer when the canonical value changes externally (e.g. another device)
+    setName(line.name);
+  }, [line.name]);
+
+  function commitName() {
+    if (name !== line.name) onUpdate(line.id, { name });
+  }
 
   return (
     <div className="card-surface flex flex-wrap items-center gap-3 rounded-2xl p-3.5">
       <div className="min-w-[10rem] flex-1">
         <input
-          value={line.name}
-          onChange={(e) => onUpdate(line.id, { name: e.target.value })}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={commitName}
+          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
           className="w-full bg-transparent text-sm text-foreground focus:outline-none"
         />
         <div className="mt-1 flex items-center gap-1.5">
@@ -172,11 +183,11 @@ function LineRow({
           {line.provisional && <ProvisionalPill />}
         </div>
       </div>
-      <NumberField label="Low" value={line.budgetLow} onChange={(v) => onUpdate(line.id, { budgetLow: v })} />
-      <NumberField label="Mid" value={line.budgetMid} onChange={(v) => onUpdate(line.id, { budgetMid: v })} />
-      <NumberField label="High" value={line.budgetHigh} onChange={(v) => onUpdate(line.id, { budgetHigh: v })} />
-      <NumberField label="Committed" value={line.committed} onChange={(v) => onUpdate(line.id, { committed: v })} />
-      <NumberField label="Actual" value={line.actual} onChange={(v) => onUpdate(line.id, { actual: v })} />
+      <NumberField label="Low" value={line.budgetLow} onCommit={(v) => onUpdate(line.id, { budgetLow: v })} />
+      <NumberField label="Mid" value={line.budgetMid} onCommit={(v) => onUpdate(line.id, { budgetMid: v })} />
+      <NumberField label="High" value={line.budgetHigh} onCommit={(v) => onUpdate(line.id, { budgetHigh: v })} />
+      <NumberField label="Committed" value={line.committed} onCommit={(v) => onUpdate(line.id, { committed: v })} />
+      <NumberField label="Actual" value={line.actual} onCommit={(v) => onUpdate(line.id, { actual: v })} />
       <div className="w-24 shrink-0 text-right">
         <p className="text-[10px] uppercase tracking-wide text-muted-dim">Variance</p>
         <p className={`text-sm ${variance > 0 ? "text-danger" : "text-good"}`}>{formatSignedAUD(variance)}</p>
@@ -192,14 +203,28 @@ function LineRow({
   );
 }
 
-function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+function NumberField({ label, value, onCommit }: { label: string; value: number; onCommit: (v: number) => void }) {
+  const [text, setText] = useState(String(value));
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the local edit buffer when the canonical value changes externally (e.g. another device)
+    setText(String(value));
+  }, [value]);
+
+  function commit() {
+    const parsed = Number(text) || 0;
+    if (parsed !== value) onCommit(parsed);
+    else setText(String(value));
+  }
+
   return (
     <div className="w-20 shrink-0">
       <p className="text-[10px] uppercase tracking-wide text-muted-dim">{label}</p>
       <input
         type="number"
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value) || 0)}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
         className="w-full bg-transparent text-sm text-foreground focus:outline-none"
       />
     </div>

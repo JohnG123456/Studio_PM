@@ -13,7 +13,7 @@ import {
 } from "./icons";
 
 const NAV = [
-  { href: "/", label: "Dashboard", icon: IconDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: IconDashboard },
   { href: "/board", label: "Board", icon: IconBoard },
   { href: "/dependencies", label: "Dependencies", icon: IconAlert },
   { href: "/timeline", label: "Timeline", icon: IconTimeline },
@@ -34,7 +34,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="mt-8 flex flex-col gap-1">
           {NAV.map(({ href, label, icon: Icon }) => {
-            const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+            const active = pathname.startsWith(href);
             return (
               <Link
                 key={href}
@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         <nav className="flex gap-1 overflow-x-auto border-b border-border px-3 py-2 md:hidden">
           {NAV.map(({ href, label, icon: Icon }) => {
-            const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+            const active = pathname.startsWith(href);
             return (
               <Link
                 key={href}

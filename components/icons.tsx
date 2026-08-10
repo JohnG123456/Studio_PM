@@ -123,6 +123,15 @@ export function IconX({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
+export function IconLogOut({ className, strokeWidth = 1.6 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} stroke={base} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 4.5H7.5A1.5 1.5 0 0 0 6 6v12a1.5 1.5 0 0 0 1.5 1.5H15" />
+      <path d="M20 12H10.5M20 12l-3.5-3.5M20 12l-3.5 3.5" />
+    </svg>
+  );
+}
+
 export function IconGear({ className, strokeWidth = 1.6 }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} stroke={base} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">

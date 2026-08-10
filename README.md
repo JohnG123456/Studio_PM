@@ -14,37 +14,78 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. Data is stored in the browser's `localStorage`,
-pre-seeded from the real Master Summary v14 and Clean_Budget_v7_4 documents —
-see [Data sources](#data-sources).
+Open http://localhost:3000. **Out of the box, with no setup, the app runs in
+local demo mode**: data is stored in the browser's `localStorage`, pre-seeded
+from the real Master Summary v14 and Clean_Budget_v7_4 documents — see
+[Data sources](#data-sources). Do the Supabase setup below whenever you want
+cross-device sync and live gear reconciliation with the Inventory app.
+
+## Connecting cloud sync (Supabase) — same project as the Inventory app
+
+This app is designed to share one Supabase project with the Studio Inventory
+app: one login, one Postgres database, and gear-type items link live to the
+Inventory app's real records instead of a manual export/import.
+
+1. **Use the Inventory app's existing Supabase project** — don't create a new
+   one. If you haven't set that up yet, do it first (see that repo's README).
+2. **Run this app's schema.** In the Supabase dashboard, *SQL Editor → New
+   query*, paste the entire contents of
+   [`supabase/schema.sql`](./supabase/schema.sql), and run it. This adds
+   `project_items`, `decisions`, and `budget_lines` tables alongside the
+   Inventory app's existing `items` table, with row-level security so each
+   account only ever sees its own rows.
+3. **Reuse the same API keys.** Copy `.env.example` to `.env.local` and fill
+   in the same `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   you used for the Inventory app (Project Settings → API in the Supabase
+   dashboard).
+4. **Restart the app.** You'll see a sign-in/sign-up screen. Use the **same
+   account** as your Inventory app — that's what makes gear-type items link
+   live. First sign-in on a fresh account auto-seeds it with the real Master
+   Summary v14 / Clean_Budget_v7_4 data, same as local mode.
+
+Signing up creates a Supabase Auth user shared across both apps (same
+`auth.users` table), so gear-type items here read the Inventory app's `items`
+table directly and filtered to your account — see
+*Settings → Inventory App Reconciliation*, which shows "live" status instead
+of the manual JSON import/export flow local mode falls back to.
+
+### Deploying it (Vercel)
+
+1. Push this repo to GitHub (already done — `claude/project-brief-review-l9fivx`).
+   Vercel's Production Branch defaults to `main`; this repo doesn't have one
+   yet, so either merge this branch into `main` first, or point Vercel's
+   Production Branch setting at this branch directly.
+2. **Vercel dashboard → Add New → Project → Import Git Repository** → pick
+   this repo. Framework (Next.js) is auto-detected, no build config needed.
+3. Set the same two `NEXT_PUBLIC_SUPABASE_*` environment variables in the
+   Vercel project's settings (Project Settings → Environment Variables).
+   Without them, the deployed app runs in local-only mode.
+4. Deploy. Every push to the connected branch redeploys automatically.
 
 ## Open questions from the handoff brief — resolved
 
-**Storage format: JSON via `localStorage`.** Same default-local model as the
-Studio Inventory app. Data volume here (a few hundred task/decision/budget
-records) doesn't warrant SQLite, and staying in localStorage keeps this app
-consistent with its sibling. Settings → Backup & Reset gives full JSON
-export/import for portability and safekeeping.
+**Storage format: JSON, either `localStorage` (default) or Supabase Postgres
+(once connected).** Same dual-mode model as the Studio Inventory app —
+`lib/data/DataProvider.tsx` picks the mode automatically based on whether
+`NEXT_PUBLIC_SUPABASE_*` env vars are set. Settings → Backup gives a full JSON
+export in either mode.
 
-**Reconciliation with the Inventory app: manual snapshot import, not a live
-link.** Both apps are single-device/local-first by default, so there's no
-shared backend to query live. Instead:
-- Gear-type `ProjectItem`s carry a `gearItemId` that references the Inventory
-  app's `GearItem.id`.
-- In the Inventory app, *More → Export inventory as JSON* produces the
-  snapshot; paste or upload it under *Settings → Inventory App Reconciliation*
-  in this app.
-- Settings shows every linked gear item's reconciliation status (`Linked` vs
-  `Not found in latest snapshot`) so a stale link is visible, not silent.
-- This is a manual sync trigger by design — re-import whenever the Inventory
-  app's data moves. If both apps are ever put on a shared Supabase backend for
-  cross-device sync, this snapshot mechanism could be swapped for a live
-  read-only query without changing the `gearItemId` reference model.
+**Reconciliation with the Inventory app: live query when Supabase is
+connected, manual snapshot import otherwise.** Gear-type `ProjectItem`s carry
+a `gearItemId` referencing the Inventory app's `GearItem.id`. With both apps
+on the same Supabase project, this app reads the Inventory app's `items`
+table directly (read-only, RLS-scoped to the signed-in user) — no export step
+needed, refresh any time via *Settings → Refresh*. Without Supabase
+configured, it falls back to a manual snapshot: *More → Export inventory as
+JSON* in the Inventory app, then paste/upload it under
+*Settings → Inventory App Reconciliation* here. Either way, Settings shows
+every linked gear item's reconciliation status (`Linked` vs
+`Not found in Inventory app`) so a stale link is visible, not silent.
 
-**Auth / sync layer: none — stays single-device.** Consistent with the
-Inventory app's default (no-Supabase) mode. Nothing here blocks adding
-Supabase later using the same pattern the Inventory app already established,
-if cross-device sync becomes a real need.
+**Auth / sync layer: optional, shared with the Inventory app when enabled.**
+Local mode (no auth, single-device) is still the zero-setup default. Once
+Supabase is connected, both apps share one Supabase Auth account — sign up
+once, sign into both.
 
 ## Document Hierarchy
 
@@ -130,18 +171,37 @@ data* pulls in whatever `demoData.ts` currently contains.
 
 ## Views
 
-- **Dashboard** (`/`) — cost-to-complete headline, stage progress, budget
-  flags, recent decisions.
+- **Dashboard** (`/dashboard`) — cost-to-complete headline, stage progress,
+  budget flags, recent decisions. `/` redirects here once signed in (or to
+  `/welcome` if not — only relevant in cloud mode; local mode is always
+  "signed in").
 - **Board** (`/board`) — Kanban by stage, the primary working view.
 - **Dependencies** (`/dependencies`) — currently-blocked items and the full
   dependency chain, surfacing the Master Summary's hard sequencing rules
   (e.g. side panels wait on listening-position confirmation).
 - **Timeline** (`/timeline`) — stage-ordered build sequence plus a computed
   critical path (longest chain through the dependency graph).
-- **Budget** (`/budget`) — category rollup and editable line items.
+- **Budget** (`/budget`) — category rollup and editable line items (commits
+  on blur, not per-keystroke, to keep cloud mode from writing on every
+  character typed).
 - **Decisions** (`/decisions`) — searchable, versioned log.
 - **Settings** (`/settings`) — Planning ingestion, gear reconciliation,
-  backup/export/reset.
+  backup, and (cloud mode) account/sign-out.
+- **Welcome / Login / Signup** (`/welcome`, `/login`, `/signup`) — only
+  reachable in cloud mode; local mode skips straight to the dashboard.
+
+## Project structure
+
+- `app/(auth)/` — welcome, login, signup screens (cloud mode only)
+- `app/(main)/` — dashboard and every other view, behind the sidebar nav
+- `lib/data/DataProvider.tsx` — the single data layer; talks to Supabase when
+  configured, otherwise falls back to `localStorage` automatically
+- `lib/data/mapRow.ts` — snake_case DB row ⇄ camelCase domain type mappers,
+  plus the mapper for reading the Inventory app's `items` table
+- `lib/data/demoData.ts` — the real Master Summary v14 / Clean_Budget_v7_4
+  seed data, used both for a fresh local browser and a fresh cloud account
+- `supabase/schema.sql` — this app's tables, RLS policies; run in the same
+  project as the Inventory app's own `supabase/schema.sql`
 
 ## Ingesting Planning Agent output
 
