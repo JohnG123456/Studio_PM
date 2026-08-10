@@ -62,16 +62,19 @@ This app should only ever be updated from Master Summary content (via the
 Decisions log and Planning ingestion), never from the Acoustic Design Document
 or Operations Manual directly.
 
-**Location-change caveat (unresolved):** the original project handoff
-described the studio moving from under the house to above the carport, with
-acoustic dimensions provisional until the new room is confirmed. Master
-Summary v14 itself makes **no mention of this anywhere** — it treats the
-6.7×5.0×3.0m room as fixed. The only thing v14 calls provisional is the
-listening position pending the Section 7A rolling bass test, which is a
-normal acoustic-commissioning step, not a location question. This app follows
-v14 (the canonical document) rather than the older handoff note, but the
-discrepancy is unresolved — confirm with John whether the carport relocation
-is still live before trusting room dimensions.
+**Location-change caveat (working assumption, tracked open):** the original
+project handoff described the studio moving from under the house to above
+the carport. Master Summary v14 itself makes **no mention of this
+anywhere** — it treats the 6.7×5.0×3.0m room as fixed, and the only thing it
+calls provisional is the listening position pending the Section 7A rolling
+bass test (a normal commissioning step, unrelated to the location question).
+Confirmed with John (2026-08-10): the working assumption is that the
+above-carport build carries over v14's dimensions as-is; Budget, Planning,
+and Rack/Signal Chain work proceeds unblocked on that assumption, and
+acoustic properties get recalculated only if the confirmed as-built room
+differs. Tracked as the "Confirm above-carport room dimensions" item on
+Stage 1 and the matching decision in the Decisions log — still open, not
+locked, revisit once the room is confirmed.
 
 ## Data sources
 

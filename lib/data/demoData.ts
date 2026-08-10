@@ -15,10 +15,12 @@ import { BudgetLineItem, Decision, ProjectItem } from "../types";
 // stay visible rather than getting silently papered over:
 //   - Master Summary v14 makes no mention of the studio moving from
 //     under-house to above-carport (a location change described in the
-//     original project handoff). The only "provisional" geometry v14 itself
-//     calls out is the listening position, pending the Section 7A rolling
-//     bass test — that's what drives `provisional: true` below, not the
-//     carport question.
+//     original project handoff). Confirmed with John (2026-08-10): the
+//     working assumption is the same dimensions carry over to the
+//     above-carport location; acoustic properties get recalculated only if
+//     the confirmed room differs. See the "d-carport-dimensions-assumption"
+//     decision and the "s1-confirm-carport-dimensions" task below — this is
+//     a tracked working assumption, not a blocker on other stages.
 //   - Clean_Budget_v7_4 lists the primary control-room headphone amp as an
 //     RNHP upgrade ("UPDATED v7.4"), while Master Summary v14's own body
 //     text and Section 19 open items still say Behringer HA8000. See the
@@ -52,6 +54,7 @@ export function buildDemoItems(): ProjectItem[] {
     { id: "s1-kh120-stand-selection", stage: 1, name: "KH120 II nearfield stand selection", type: "task", status: "not_started", category: "Monitoring", notes: "Specify model, height (tweeter at ~1200mm AFFL), spiked feet for rigid coupling.", dependsOn: [], sourceVersion: "Master Summary v14" },
     { id: "s1-a8h-bracket-selection", stage: 1, name: "A8H wall mount arm — select bracket", type: "task", status: "not_started", category: "Monitoring", notes: "Min 20kg rated capacity, 15° tilt range, rubber/neoprene isolation. Structural blocking centre at 1730–1750mm AFFL — confirm exact figure from the bracket spec sheet before the carpenter fixes blocking.", dependsOn: [], provisional: true, sourceVersion: "Master Summary v14" },
     { id: "s1-rug-sourcing", stage: 1, name: "Source acoustic rug", type: "task", status: "not_started", category: "Flooring", notes: "3.5m × 4.5m, 100% wool pile (min 15mm), dense felt underlay (10mm, Dunlop Opal or equivalent), dark charcoal or deep grey — NOT beige (conflicts with Cask & Carbon palette). ~$2,500–3,500. Allow 6–12 week lead time for made-to-order — must be ordered well before the Stage 4 Critical Geometry install.", dependsOn: [], sourceVersion: "Master Summary v14" },
+    { id: "s1-confirm-carport-dimensions", stage: 1, name: "Confirm above-carport room dimensions", type: "decision", status: "in_progress", category: "Acoustics", notes: "Working assumption (confirmed with John 2026-08-10): the above-carport room carries over the same dimensions as Master Summary v14's design (6.7×5.0×3.0m control room), so Budget, Planning, and Rack/Signal Chain work proceeds unblocked on that assumption. Acoustic properties (LP target, diffuser placement, wall treatment coordinates) get recalculated only if the confirmed as-built room differs from v14's figures. Not a dependency of any other item — informational tracking only, do not gate other stages on this.", dependsOn: [], provisional: true, sourceVersion: "Handoff brief clarification" },
 
     // ---------------------------------------------------------------
     // Stage 2 — Construction Shell (Section 7A Phase 1)
@@ -168,6 +171,7 @@ export function buildDemoDecisions(): Decision[] {
     { id: "d-smart-lighting-confirmed", title: "Smart lighting (control room) — confirmed", description: "Smart lighting system, not conventional dimmer switches — leading-edge dimmers cause electrical noise.", category: "Lighting", version: "v14", tags: ["lighting"] },
     { id: "d-rack-angle-updated", title: "Rack angle — updated to 20–25°", description: "Updated from an earlier 5–10° figure. Better acoustic performance, ergonomics, and aesthetics.", category: "Rack", version: "v14", tags: ["rack"] },
     { id: "d-rug-spec-resolved", title: "Acoustic rug specification", description: "3.5m × 4.5m, 100% wool pile on dense felt underlay, dark charcoal or deep grey colour. Beige explicitly rejected — the Studio Colour Palette document's 'solid beige rug' conflicts with the acoustic spec and the Cask & Carbon base colour theme; the acoustic spec takes precedence.", category: "Flooring", version: "v10", tags: ["acoustics", "flooring"] },
+    { id: "d-carport-dimensions-assumption", title: "Above-carport room: same dimensions, working assumption", description: "Master Summary v14 doesn't mention the under-house-to-above-carport location change at all — it treats the 6.7×5.0×3.0m control room as fixed. Confirmed with John (2026-08-10): the working assumption is that the above-carport build carries over the same dimensions as v14's design, so Budget, Planning, and Rack/Signal Chain work is NOT gated on a geometry redo. Acoustic properties (LP target, diffuser placement, wall treatment coordinates) get recalculated only if the confirmed as-built room differs from v14's figures. Track via the Stage 1 'Confirm above-carport room dimensions' item — still open, not yet locked.", category: "Acoustics", version: "Handoff brief clarification (2026-08-10)", tags: ["acoustics", "carport", "assumption", "provisional"] },
 
     // Notable LOCKED constraints stated in the document body but not listed
     // as formal Section 20 entries — still important enough not to reopen.
