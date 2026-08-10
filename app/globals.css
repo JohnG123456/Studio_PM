@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0f0b08;
+  --background-elevated: #17110c;
+  --card: #1c140f;
+  --card-hover: #241a13;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --foreground: #f5efe6;
+  --muted: #a99c8e;
+  --muted-dim: #7d7264;
+  --accent: #e0954d;
+  --accent-strong: #d97f3d;
+  --accent-soft: rgba(224, 149, 77, 0.14);
+  --accent-soft-strong: rgba(224, 149, 77, 0.28);
+  --gold: #e0a458;
+  --good: #7fb894;
+  --good-soft: rgba(127, 184, 148, 0.14);
+  --warn: #d9a83d;
+  --warn-soft: rgba(217, 168, 61, 0.14);
+  --danger: #d9633d;
+  --danger-soft: rgba(217, 99, 61, 0.14);
+  --info: #6f9fc9;
+  --info-soft: rgba(111, 159, 201, 0.14);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-elevated: var(--background-elevated);
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-dim: var(--muted-dim);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-gold: var(--gold);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.card-surface {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+input,
+textarea,
+select {
+  color-scheme: dark;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
