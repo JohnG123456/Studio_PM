@@ -17,10 +17,22 @@ import { IconPlus, IconTrash } from "@/components/icons";
 import { FieldLabel, PlainInput, PlainSelect, PrimaryButton, SecondaryButton } from "@/components/FormControls";
 import { ProvisionalPill } from "@/components/Badges";
 
+type SortOrder = "category" | "name" | "budget-desc" | "ctc-desc" | "variance-desc";
+
+const SORT_LABELS: Record<SortOrder, string> = {
+  category: "Category (default)",
+  name: "Name (A–Z)",
+  "budget-desc": "Budgeted (high → low)",
+  "ctc-desc": "Cost to complete (high → low)",
+  "variance-desc": "Variance (most over first)",
+};
+
 export default function BudgetPage() {
   const { budget, addBudgetLine, updateBudgetLine, deleteBudgetLine } = useData();
   const [adding, setAdding] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortOrder>("category");
 
   const rollup = useMemo(() => rollupByCategory(budget), [budget]);
   const ctc = useMemo(() => totalCostToComplete(budget), [budget]);
@@ -35,7 +47,37 @@ export default function BudgetPage() {
     [budget]
   );
 
-  const visibleLines = filterCategory ? budget.filter((l) => l.category === filterCategory) : budget;
+  const visibleLines = useMemo(() => {
+    let lines = filterCategory ? budget.filter((l) => l.category === filterCategory) : budget;
+
+    const q = search.trim().toLowerCase();
+    if (q) {
+      lines = lines.filter(
+        (l) =>
+          l.name.toLowerCase().includes(q) ||
+          l.category.toLowerCase().includes(q) ||
+          (l.notes ?? "").toLowerCase().includes(q)
+      );
+    }
+
+    if (sortBy === "category") return lines;
+    const sorted = [...lines];
+    switch (sortBy) {
+      case "name":
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "budget-desc":
+        sorted.sort((a, b) => b.budgetMid - a.budgetMid);
+        break;
+      case "ctc-desc":
+        sorted.sort((a, b) => lineCostToComplete(b) - lineCostToComplete(a));
+        break;
+      case "variance-desc":
+        sorted.sort((a, b) => lineVariance(b) - lineVariance(a));
+        break;
+    }
+    return sorted;
+  }, [budget, filterCategory, search, sortBy]);
 
   return (
     <div className="flex flex-1 flex-col pb-12">
@@ -101,18 +143,38 @@ export default function BudgetPage() {
           <h2 className="font-display text-lg text-foreground">
             Line Items {filterCategory && <span className="text-sm text-muted-dim">— {filterCategory}</span>}
           </h2>
-          <div className="flex items-center gap-3">
-            {filterCategory && (
-              <button className="text-xs text-accent" onClick={() => setFilterCategory("")}>
-                Clear filter
-              </button>
-            )}
-            <SecondaryButton onClick={() => setAdding(true)}>
-              <span className="flex items-center gap-1.5">
-                <IconPlus className="h-3.5 w-3.5" /> Add line
-              </span>
-            </SecondaryButton>
+          <SecondaryButton onClick={() => setAdding(true)}>
+            <span className="flex items-center gap-1.5">
+              <IconPlus className="h-3.5 w-3.5" /> Add line
+            </span>
+          </SecondaryButton>
+        </div>
+
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <PlainInput
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search line items…"
+            className="max-w-xs flex-1"
+          />
+          <div className="w-full shrink-0 sm:w-64">
+            <PlainSelect
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOrder)}
+              aria-label="Sort line items"
+            >
+              {Object.entries(SORT_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  Sort: {label}
+                </option>
+              ))}
+            </PlainSelect>
           </div>
+          {filterCategory && (
+            <button className="text-xs text-accent" onClick={() => setFilterCategory("")}>
+              Clear category filter
+            </button>
+          )}
         </div>
 
         {adding && (
@@ -127,7 +189,9 @@ export default function BudgetPage() {
 
         <div className="flex flex-col gap-2">
           {visibleLines.length === 0 && !adding && (
-            <p className="text-sm text-muted-dim">No budget lines yet.</p>
+            <p className="text-sm text-muted-dim">
+              {search || filterCategory ? "Nothing matches — try a different search or clear the filter." : "No budget lines yet."}
+            </p>
           )}
           {visibleLines.map((line) => (
             <LineRow key={line.id} line={line} onUpdate={updateBudgetLine} onDelete={deleteBudgetLine} />
