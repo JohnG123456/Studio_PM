@@ -93,7 +93,12 @@ function DecisionCard({ decision, onDelete }: { decision: Decision; onDelete: (i
             ))}
           </div>
         </div>
-        <button onClick={() => onDelete(decision.id)} className="shrink-0 text-muted-dim hover:text-danger">
+        <button
+          onClick={() => {
+            if (confirm(`Delete "${decision.title}"? This can't be undone.`)) onDelete(decision.id);
+          }}
+          className="shrink-0 text-muted-dim hover:text-danger"
+        >
           <IconTrash className="h-3.5 w-3.5" />
         </button>
       </div>

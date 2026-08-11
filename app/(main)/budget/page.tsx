@@ -42,13 +42,6 @@ export default function BudgetPage() {
       <PageHeader
         title="Budget"
         subtitle="Budgeted (low/mid/high) vs Committed vs Actual, pulled per line item"
-        actions={
-          <SecondaryButton onClick={() => setAdding(true)}>
-            <span className="flex items-center gap-1.5">
-              <IconPlus className="h-3.5 w-3.5" /> Add line
-            </span>
-          </SecondaryButton>
-        }
       />
 
       <div className="grid grid-cols-2 gap-4 px-5 py-5 md:grid-cols-4 md:px-8">
@@ -104,15 +97,22 @@ export default function BudgetPage() {
       </div>
 
       <div className="px-5 py-5 md:px-8">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="font-display text-lg text-foreground">
             Line Items {filterCategory && <span className="text-sm text-muted-dim">— {filterCategory}</span>}
           </h2>
-          {filterCategory && (
-            <button className="text-xs text-accent" onClick={() => setFilterCategory("")}>
-              Clear filter
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {filterCategory && (
+              <button className="text-xs text-accent" onClick={() => setFilterCategory("")}>
+                Clear filter
+              </button>
+            )}
+            <SecondaryButton onClick={() => setAdding(true)}>
+              <span className="flex items-center gap-1.5">
+                <IconPlus className="h-3.5 w-3.5" /> Add line
+              </span>
+            </SecondaryButton>
+          </div>
         </div>
 
         {adding && (
@@ -196,7 +196,13 @@ function LineRow({
         <p className="text-[10px] uppercase tracking-wide text-muted-dim">To complete</p>
         <p className="text-sm text-foreground">{formatAUD(ctc)}</p>
       </div>
-      <button onClick={() => onDelete(line.id)} aria-label="Delete line" className="shrink-0 text-muted-dim hover:text-danger">
+      <button
+        onClick={() => {
+          if (confirm(`Delete "${line.name}"? This can't be undone.`)) onDelete(line.id);
+        }}
+        aria-label="Delete line"
+        className="shrink-0 text-muted-dim hover:text-danger"
+      >
         <IconTrash className="h-4 w-4" />
       </button>
     </div>
