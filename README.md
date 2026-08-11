@@ -82,13 +82,28 @@ export in either mode.
 connected, manual snapshot import otherwise.** Gear-type `ProjectItem`s carry
 a `gearItemId` referencing the Inventory app's `GearItem.id`. With both apps
 on the same Supabase project, this app reads the Inventory app's `items`
-table directly (read-only, RLS-scoped to the signed-in user) — no export step
-needed, refresh any time via *Settings → Refresh*. Without Supabase
-configured, it falls back to a manual snapshot: *More → Export inventory as
-JSON* in the Inventory app, then paste/upload it under
+table directly (RLS-scoped to the signed-in user) — no export step needed,
+refresh any time via *Settings → Refresh*. Without Supabase configured, it
+falls back to a manual snapshot: *More → Export inventory as JSON* in the
+Inventory app, then paste/upload it under
 *Settings → Inventory App Reconciliation* here. Either way, Settings shows
 every linked gear item's reconciliation status (`Linked` vs
 `Not found in Inventory app`) so a stale link is visible, not silent.
+
+**One write-back path, and only one.** Everywhere else this relationship is
+strictly read-only — but a `BudgetLineItem` can also carry a `gearItemId`
+(link it via the small "Link gear" control under a Budget line's category),
+and when that line's **Actual** is set to a positive figure, PM pushes that
+number to the linked item's `purchase_price` in the Inventory app
+(`lib/data/DataProvider.tsx`'s `syncGearPurchasePrice`). This exists because
+otherwise the two apps' cost figures silently drift — Actual gets recorded
+here when something is paid for, and without this, someone has to remember
+to separately go update the Inventory app's price by hand. Deliberately
+narrow: it only ever touches `purchase_price` on the one linked item, never
+`manual_value`/valuation fields, never in local mode (nothing to write to),
+and it fires from an `UPDATE` under the same RLS policy that already scopes
+`items` to `auth.uid() = user_id` — no schema or policy change was needed on
+the Inventory app's side for this to be allowed.
 
 **Auth / sync layer: optional, shared with the Inventory app when enabled.**
 Local mode (no auth, single-device) is still the zero-setup default. Once

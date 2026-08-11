@@ -422,6 +422,33 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   );
 
   // ---- budget ----
+
+  // Write-back to the Inventory app: only fires when a budget line is
+  // linked to a real gear item AND has a positive Actual, and only in
+  // cloud mode (nothing to write to locally — the manual snapshot is
+  // read-only by design). Keeps that item's purchase price in sync with
+  // what's actually been paid, so its Inventory valuation doesn't drift
+  // out of date from a figure only ever recorded here. Non-fatal on
+  // failure — the budget line itself has already saved either way.
+  const syncGearPurchasePrice = useCallback(
+    async (gearItemId: string, actual: number) => {
+      if (!cloud || !userId) return;
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) return;
+      const { error } = await supabase
+        .from("items")
+        .update({ purchase_price: actual })
+        .eq("id", gearItemId)
+        .eq("user_id", userId);
+      if (error) {
+        console.warn("Couldn't sync purchase price to the Inventory app:", error.message);
+        return;
+      }
+      setInventoryItems((prev) => prev.map((g) => (g.id === gearItemId ? { ...g, purchasePrice: actual } : g)));
+    },
+    [cloud, userId]
+  );
+
   const addBudgetLine = useCallback(
     async (b: NewBudgetLineItem): Promise<BudgetLineItem> => {
       const id = genId();
@@ -436,6 +463,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (error) throw error;
         const created = rowToBudgetLine(data as BudgetLineRow);
         setBudget((prev) => [...prev, created]);
+        if (created.gearItemId && created.actual > 0) {
+          syncGearPurchasePrice(created.gearItemId, created.actual);
+        }
         return created;
       }
       const created: BudgetLineItem = { ...b, id, createdAt: nowIso(), updatedAt: nowIso() };
@@ -446,7 +476,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       });
       return created;
     },
-    [cloud, userId]
+    [cloud, userId, syncGearPurchasePrice]
   );
 
   const updateBudgetLine = useCallback(
@@ -465,6 +495,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (error) throw error;
         const updated = rowToBudgetLine(data as BudgetLineRow);
         setBudget((prev) => prev.map((b) => (b.id === id ? updated : b)));
+        if (updated.gearItemId && updated.actual > 0) {
+          syncGearPurchasePrice(updated.gearItemId, updated.actual);
+        }
         return;
       }
       setBudget((prev) => {
@@ -473,7 +506,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
     },
-    [cloud, userId, budget]
+    [cloud, userId, budget, syncGearPurchasePrice]
   );
 
   const deleteBudgetLine = useCallback(

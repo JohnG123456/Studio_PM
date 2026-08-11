@@ -299,11 +299,31 @@ export default function HelpPage() {
             next to the &ldquo;Line Items&rdquo; heading, fill in a name, category, and a budget figure, then{" "}
             <Kbd>Add</Kbd>.
           </p>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-dim">
+              Linking gear &amp; keeping the Inventory app in sync
+            </p>
+            <StepList
+              steps={[
+                <>
+                  Under a line&rsquo;s category, press <Kbd>Link gear</Kbd>{" "}
+                  and pick the matching Inventory app record.
+                </>,
+                <>
+                  Once linked, setting that line&rsquo;s <strong className="text-foreground">Actual</strong>{" "}
+                  to a real figure pushes that price straight to the linked item&rsquo;s purchase price in the
+                  Inventory app — no manual double-entry, and no forgetting to update it later.
+                </>,
+                "Press the small × on the linked pill to unlink a line at any time.",
+              ]}
+            />
+          </div>
           <Note>
             Watch for the amber <ProvisionalPill />{" "}
             tag — it means the figure is a placeholder (e.g. the Construction Shell numbers, which have no
             builder&rsquo;s quote behind them yet) rather than a sourced estimate. Deleting a line always asks for
-            confirmation first.
+            confirmation first. The gear-price sync only runs in cloud mode — local mode has no live Inventory app
+            to push a price to.
           </Note>
         </Section>
 

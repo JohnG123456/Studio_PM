@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import {
   BudgetLineItem,
   CATEGORIES,
+  GearSnapshotItem,
   lineCostToComplete,
   lineVariance,
   NewBudgetLineItem,
@@ -13,7 +14,7 @@ import {
   totalCostToComplete,
 } from "@/lib/types";
 import { formatAUD, formatSignedAUD } from "@/lib/format";
-import { IconPlus, IconTrash } from "@/components/icons";
+import { IconLink, IconPlus, IconTrash, IconX } from "@/components/icons";
 import { FieldLabel, PlainInput, PlainSelect, PrimaryButton, SecondaryButton } from "@/components/FormControls";
 import { ProvisionalPill } from "@/components/Badges";
 
@@ -28,7 +29,7 @@ const SORT_LABELS: Record<SortOrder, string> = {
 };
 
 export default function BudgetPage() {
-  const { budget, addBudgetLine, updateBudgetLine, deleteBudgetLine } = useData();
+  const { budget, addBudgetLine, updateBudgetLine, deleteBudgetLine, availableGearItems, gearSource } = useData();
   const [adding, setAdding] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>("");
   const [search, setSearch] = useState("");
@@ -177,6 +178,13 @@ export default function BudgetPage() {
           )}
         </div>
 
+        <p className="mb-4 text-xs text-muted-dim">
+          <IconLink className="mr-1 inline h-3 w-3 align-[-1px]" />
+          {gearSource === "live"
+            ? "Link a line to a gear item, and setting Actual pushes that price straight to the Inventory app — no manual updates to forget."
+            : "Link a line to a gear item for your own records. Local mode has no live Inventory app to push prices to — connect Supabase for that (see Settings)."}
+        </p>
+
         {adding && (
           <NewLineForm
             onCancel={() => setAdding(false)}
@@ -194,7 +202,13 @@ export default function BudgetPage() {
             </p>
           )}
           {visibleLines.map((line) => (
-            <LineRow key={line.id} line={line} onUpdate={updateBudgetLine} onDelete={deleteBudgetLine} />
+            <LineRow
+              key={line.id}
+              line={line}
+              onUpdate={updateBudgetLine}
+              onDelete={deleteBudgetLine}
+              availableGearItems={availableGearItems}
+            />
           ))}
         </div>
       </div>
@@ -215,10 +229,12 @@ function LineRow({
   line,
   onUpdate,
   onDelete,
+  availableGearItems,
 }: {
   line: BudgetLineItem;
   onUpdate: (id: string, patch: Partial<NewBudgetLineItem>) => void;
   onDelete: (id: string) => void;
+  availableGearItems: GearSnapshotItem[];
 }) {
   const variance = lineVariance(line);
   const ctc = lineCostToComplete(line);
@@ -242,9 +258,10 @@ function LineRow({
           onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
           className="w-full bg-transparent text-sm text-foreground focus:outline-none"
         />
-        <div className="mt-1 flex items-center gap-1.5">
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
           <span className="text-[11px] text-muted-dim">{line.category}</span>
           {line.provisional && <ProvisionalPill />}
+          <GearLinkControl line={line} onUpdate={onUpdate} availableGearItems={availableGearItems} />
         </div>
       </div>
       <NumberField label="Low" value={line.budgetLow} onCommit={(v) => onUpdate(line.id, { budgetLow: v })} />
@@ -270,6 +287,68 @@ function LineRow({
         <IconTrash className="h-4 w-4" />
       </button>
     </div>
+  );
+}
+
+function GearLinkControl({
+  line,
+  onUpdate,
+  availableGearItems,
+}: {
+  line: BudgetLineItem;
+  onUpdate: (id: string, patch: Partial<NewBudgetLineItem>) => void;
+  availableGearItems: GearSnapshotItem[];
+}) {
+  const [picking, setPicking] = useState(false);
+
+  if (line.gearItemId) {
+    const linkedGear = availableGearItems.find((g) => g.id === line.gearItemId);
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent-soft px-2 py-0.5 text-[11px] text-accent">
+        <IconLink className="h-3 w-3" />
+        {linkedGear ? linkedGear.name : "Linked gear item (not found)"}
+        <button
+          type="button"
+          onClick={() => onUpdate(line.id, { gearItemId: undefined })}
+          aria-label="Unlink gear item"
+          className="text-accent/70 hover:text-danger"
+        >
+          <IconX className="h-3 w-3" />
+        </button>
+      </span>
+    );
+  }
+
+  if (picking) {
+    return (
+      <select
+        autoFocus
+        defaultValue=""
+        onChange={(e) => {
+          if (e.target.value) onUpdate(line.id, { gearItemId: e.target.value });
+          setPicking(false);
+        }}
+        onBlur={() => setPicking(false)}
+        className="rounded-full border border-border bg-background-elevated px-2 py-0.5 text-[11px] text-foreground focus:border-accent focus:outline-none"
+      >
+        <option value="">{availableGearItems.length ? "Pick gear item…" : "No gear items available"}</option>
+        {availableGearItems.map((g) => (
+          <option key={g.id} value={g.id}>
+            {g.name}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setPicking(true)}
+      className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-[11px] text-muted-dim hover:text-accent"
+    >
+      <IconLink className="h-3 w-3" /> Link gear
+    </button>
   );
 }
 
