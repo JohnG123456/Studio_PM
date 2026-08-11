@@ -35,9 +35,17 @@ Inventory app's real records instead of a manual export/import.
    Inventory app's existing `items` table, with row-level security so each
    account only ever sees its own rows.
 3. **Reuse the same API keys.** Copy `.env.example` to `.env.local` and fill
-   in the same `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   you used for the Inventory app (Project Settings → API in the Supabase
-   dashboard).
+   in `NEXT_PUBLIC_SUPABASE_URL` and the project's public key from
+   Project Settings → API in the Supabase dashboard — labelled "anon key" on
+   older projects or "publishable key" on newer ones, either is fine, and
+   either env var name works (`NEXT_PUBLIC_SUPABASE_ANON_KEY` or
+   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`). Use the same project/keys as the
+   Inventory app.
+   
+   **On Vercel:** adding or changing env vars doesn't touch an already-built
+   deployment — `NEXT_PUBLIC_*` values are baked in at build time. After
+   setting them in Project Settings → Environment Variables, trigger a fresh
+   deploy (Deployments tab → ⋯ → Redeploy) before they take effect.
 4. **Restart the app.** You'll see a sign-in/sign-up screen. Use the **same
    account** as your Inventory app — that's what makes gear-type items link
    live. First sign-in on a fresh account auto-seeds it with the real Master
