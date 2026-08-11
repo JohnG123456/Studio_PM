@@ -8,6 +8,7 @@ import {
   IconBook,
   IconDashboard,
   IconDollar,
+  IconHelp,
   IconSettings,
   IconTimeline,
 } from "./icons";
@@ -20,6 +21,7 @@ const NAV = [
   { href: "/budget", label: "Budget", icon: IconDollar },
   { href: "/decisions", label: "Decisions", icon: IconBook },
   { href: "/settings", label: "Settings", icon: IconSettings },
+  { href: "/help", label: "Help", icon: IconHelp },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

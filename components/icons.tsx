@@ -132,6 +132,16 @@ export function IconLogOut({ className, strokeWidth = 1.6 }: IconProps) {
   );
 }
 
+export function IconHelp({ className, strokeWidth = 1.6 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} stroke={base} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.3 9.3a2.7 2.7 0 1 1 3.6 2.6c-.8.3-1.4 1-1.4 1.9v.4" />
+      <circle cx="12" cy="16.8" r="0.9" fill={base} stroke="none" />
+    </svg>
+  );
+}
+
 export function IconGear({ className, strokeWidth = 1.6 }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} stroke={base} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
