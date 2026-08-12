@@ -87,8 +87,10 @@ export default function BudgetPage() {
         subtitle="Budgeted (low/mid/high) vs Committed vs Actual, pulled per line item"
       />
 
-      <div className="grid grid-cols-2 gap-4 px-5 py-5 md:grid-cols-4 md:px-8">
+      <div className="grid grid-cols-2 gap-4 px-5 py-5 sm:grid-cols-3 md:grid-cols-6 md:px-8">
+        <Stat label="Budgeted (low)" value={formatAUD(totals.budgetLow)} />
         <Stat label="Budgeted (mid)" value={formatAUD(totals.budgetMid)} />
+        <Stat label="Budgeted (high)" value={formatAUD(totals.budgetHigh)} />
         <Stat label="Committed" value={formatAUD(totals.committed)} />
         <Stat label="Actual" value={formatAUD(totals.actual)} />
         <Stat label="Cost to Complete" value={formatAUD(ctc)} accent />
