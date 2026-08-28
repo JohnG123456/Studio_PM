@@ -251,10 +251,11 @@ pip install pillow numpy
 python3 design/generate-icons.py
 ```
 
-That writes `app/icon.png` (favicon), `app/apple-icon.png` (iOS home screen,
-left square so iOS applies its own mask), and `public/icons/` — 192/512/1024
-plus a maskable 512 for Android. `app/manifest.ts` lists them for install
-prompts, and `components/Logo.tsx` renders the same mark in-app.
+That writes `app/favicon.ico` (16/32/48, cropped tighter and sharpened so the
+mark still reads in a tab), `app/icon.png`, `app/apple-icon.png` (iOS home
+screen, left square so iOS applies its own mask), and `public/icons/` —
+192/512/1024 plus a maskable 512 for Android. `app/manifest.ts` lists them for
+install prompts, and `components/Logo.tsx` renders the same mark in-app.
 
 ## Ingesting Planning Agent output
 
