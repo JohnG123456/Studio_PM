@@ -237,6 +237,24 @@ data* pulls in whatever `demoData.ts` currently contains.
   seed data, used both for a fresh local browser and a fresh cloud account
 - `supabase/schema.sql` — this app's tables, RLS policies; run in the same
   project as the Inventory app's own `supabase/schema.sql`
+- `design/` — the app icon design sheet and the script that cuts the icon set
+  from it
+
+## App icon
+
+The icon is the copper isometric SP monogram on the dark blueprint tile, cut
+from `design/app-icon-source.jpg`. Every size is generated, so edit the source
+sheet (or the crop constants) and re-run rather than hand-editing the PNGs:
+
+```bash
+pip install pillow numpy
+python3 design/generate-icons.py
+```
+
+That writes `app/icon.png` (favicon), `app/apple-icon.png` (iOS home screen,
+left square so iOS applies its own mask), and `public/icons/` — 192/512/1024
+plus a maskable 512 for Android. `app/manifest.ts` lists them for install
+prompts, and `components/Logo.tsx` renders the same mark in-app.
 
 ## Ingesting Planning Agent output
 

@@ -18,6 +18,12 @@ const displayFont = Fraunces({
 export const metadata: Metadata = {
   title: "Studio PM — 14 Contour Rd",
   description: "Platform of record for the studio build: budget, stages, dependencies, and decisions.",
+  applicationName: "Studio PM",
+  appleWebApp: {
+    capable: true,
+    title: "Studio PM",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {
