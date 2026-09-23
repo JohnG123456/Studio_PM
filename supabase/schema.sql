@@ -109,8 +109,15 @@ create trigger budget_lines_set_updated_at
 
 -- Row Level Security: every user only ever sees their own project data.
 alter table public.project_items enable row level security;
+-- Data API grants. Supabase stops granting these automatically on new
+-- tables from 30 Oct 2026, so each table states its own. anon
+-- (signed out) gets no table access; anything public goes through a
+-- view or function with its own grant. RLS still decides the rows.
+grant select, insert, update, delete on public.project_items to authenticated, service_role;
 alter table public.decisions enable row level security;
+grant select, insert, update, delete on public.decisions to authenticated, service_role;
 alter table public.budget_lines enable row level security;
+grant select, insert, update, delete on public.budget_lines to authenticated, service_role;
 
 drop policy if exists "project_items are owner-only" on public.project_items;
 create policy "project_items are owner-only"
